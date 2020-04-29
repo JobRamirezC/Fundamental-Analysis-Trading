@@ -1,4 +1,8 @@
 numpy
 pandas
 plotly
-
+oandapyV20
+datetime
+requests
+wheel
+statsmodels

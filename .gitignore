@@ -1,3 +1,4 @@
 datos
 venv
 .idea
+__pycache__/
