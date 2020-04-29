@@ -6,9 +6,13 @@
 # -- ------------------------------------------------------------------------------------ -- #
 
 # Importar librerias
-import pandas as pd
-import numpy as np
 import datos
+# import statsmodels.graphics.tsaplots
+
+# -- ----------------------------------------- FUNCION: Estadisticas de la serie de tiempo -- #
+# -- Encontrar parametros estadisticos de la serie de tiempo
+def f_estadisticas(df_inidicador):
+ pass
 
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
@@ -17,6 +21,7 @@ import datos
 def f_clasificacion_ocurrencias(file_path: str, columns=None):
     """
     :param file_path: lugar donde esta ubicado el archivo de los datos historicos del indicador
+    :param columns: columnas a tomar del archivo (opcional)
     :return: dataframe del archivo agregando la clasificacion de cada ocurrencia
 
     Debugging
@@ -58,9 +63,12 @@ def f_clasificacion_ocurrencias(file_path: str, columns=None):
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
 # -- Cargar archivo de historico indicador y clasificar cada ocurrencia
 
-def f_metricas(df_indicador):
+def f_metricas(df_indicador, load_file: bool = False):
     # obtener diccionario de ventanas de 30 min despues de indicador
-    dict_historicos = datos.f_ventanas_30_min(df=df_indicador)
+    if load_file:
+        dict_historicos = datos.load_file('datos/ventanas_historicos.pkl')
+    else:
+        dict_historicos = datos.f_ventanas_30_min(df=df_indicador)
 
     # Agregar columnas de indicadores a df
     df_indicador['direccion'] = 0
@@ -74,18 +82,18 @@ def f_metricas(df_indicador):
     for df in dict_historicos['historicos_sucesos'].values():
         # obtener direccion de ventana
         if df.Close.iloc[-1] - df.Open.iloc[0] >= 0:
-            df_indicador['direccion'][i] = 1  # 1 = alcista
+            df_indicador.loc[i, 'direccion'] = 1  # 1 = alcista
         else:
-            df_indicador['direccion'][i] = -1  # -1 = bajista
+            df_indicador.loc[i, 'direccion'] = -1  # -1 = bajista
 
         # obtener pips
-        df_indicador['pips_alcistas'][i] = df.High.iloc[-1] - df.Open.iloc[0] * 10000
-        df_indicador['pips_bajistas'][i] =
+        df_indicador.loc[i, 'pips_alcistas'] = (df.High.max() - df.Open[0]) * 10000
+        df_indicador.loc[i, 'pips_bajistas'] = (df.Open[0] - df.Low.min()) * 10000
 
-    """
-    (Dirección) Close (t_30) - Open(t_0) 
-    (Pips Alcistas) High(t_0 : t_30) – Open(t_0) 
-    (Pips Bajistas) Open(t_0) – Low(t_0 : t_30) 
-    (Volatilidad) High(t_-30 : t_30) ,  - mínimo low (t_-30:t_30) 
-    """
+        # obtener volatilidad de la ventana
+        df_indicador.loc[i, 'volatilidad'] = df.High.max() - df.Low.min()
 
+        # Contador
+        i += 1
+
+    return df_indicador

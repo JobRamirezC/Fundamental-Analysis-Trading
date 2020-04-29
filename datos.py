@@ -12,6 +12,7 @@ import oandapyV20.endpoints.instruments as instruments  # informacion de precios
 import pandas as pd  # manejo de datos
 from oandapyV20 import API  # conexion con broker OANDA
 import entradas
+import pickle
 
 
 # -- --------------------------------------------------------- FUNCION: Descargar precios -- #
@@ -19,35 +20,44 @@ import entradas
 
 def f_precios_masivos(p0_fini, p1_ffin, p2_gran, p3_inst, p4_oatk, p5_ginc):
     """
-    Funcion para descargar precios historicos masivos de OANDA
     Parameters
     ----------
-    p0_fini
-    p1_ffin
-    p2_gran
-    p3_inst
-    p4_oatk
-    p5_ginc
+    p0_fini : str : fecha inicial para descargar precios en formato str o pd.to_datetime
+    p1_ffin : str : fecha final para descargar precios en formato str o pd.to_datetime
+    p2_gran : str : M1, M5, M15, M30, H1, H4, H8, segun formato solicitado por OANDAV20 api
+    p3_inst : str : nombre de instrumento, segun formato solicitado por OANDAV20 api
+    p4_oatk : str : OANDAV20 API
+    p5_ginc : int : cantidad de datos historicos por llamada, obligatorio < 5000
     Returns
     -------
-    dc_precios
+    dc_precios : pd.DataFrame : Data Frame con precios TOHLC
     Debugging
     ---------
+    p0_fini = pd.to_datetime("2019-01-01 00:00:00").tz_localize('GMT')
+    p1_ffin = pd.to_datetime("2019-12-31 00:00:00").tz_localize('GMT')
+    p2_gran = "M1"
+    p3_inst = "USD_MXN"
+    p4_oatk = Tu token
+    p5_ginc = 4900
     """
 
     def f_datetime_range_fx(p0_start, p1_end, p2_inc, p3_delta):
         """
         Parameters
         ----------
-        p0_start
-        p1_end
-        p2_inc
-        p3_delta
+        p0_start : str : fecha inicial
+        p1_end : str : fecha final
+        p2_inc : int : incremento en cantidad de elementos
+        p3_delta : str : intervalo para medir elementos ('minutes', 'hours', 'days')
         Returns
         -------
-        ls_resultado
+        ls_result : list : lista con fechas intermedias a frequencia solicitada
         Debugging
         ---------
+        p0_start = p0_fini
+        p1_end = p1_ffin
+        p2_inc = p5_ginc
+        p3_delta = 'minutes'
         """
 
         ls_result = []
@@ -73,7 +83,7 @@ def f_precios_masivos(p0_fini, p1_ffin, p2_gran, p3_inst, p4_oatk, p5_ginc):
           'D': 60 * 60 * 24, 'W': 60 * 60 * 24 * 7, 'M': 60 * 60 * 24 * 7 * 4}
 
     # -- para el caso donde con 1 peticion se cubran las 2 fechas
-    if int((p1_ffin - p0_fini).total_seconds() / gn[p2_gran]) < 4999:
+    if int((p1_ffin - p0_fini).total_seconds() / gn[p2_gran]) < 4990:
 
         # Fecha inicial y fecha final
         f1 = p0_fini.strftime('%Y-%m-%dT%H:%M:%S')
@@ -135,7 +145,7 @@ def f_precios_masivos(p0_fini, p1_ffin, p2_gran, p3_inst, p4_oatk, p5_ginc):
             a1_hist = api.request(a1_req1)
 
             # Para debuging
-            print(f1 + ' y ' + f2)
+            # print(f1 + ' y ' + f2)
             lista = list()
 
             # Acomodar las llaves
@@ -190,6 +200,10 @@ def f_ventanas_30_min(df):
                                           p4_oatk=entradas.token, p5_ginc=4900)
 
         dictionary['historicos_sucesos'][str(time)] = df_historicos
+
+    # Guardar datos historicos en formato json par no tener que descargar precios cada ejecucion
+    save_file(dictionary, 'datos/ventanas_historicos.pkl')
+
     return dictionary
 
 
@@ -237,3 +251,18 @@ def f_validar_info(df):
             df.Consensus[i] = df.Previous[i]
     df = df.dropna()
     return df
+
+
+# -- ------------------------------------------------- FUNCION: cargar archivo formato json -- #
+# -- Guardar diccionario de historicos en formato json
+
+def load_file(filename):
+    data = pickle.load(open(filename, 'rb'))
+    return data
+
+
+# -- ------------------------------------------------- FUNCION: guardar archivo formato json -- #
+# -- Cargar diccionario de historicos en formato json
+
+def save_file(data, filename):
+    pickle.dump(data, open(filename, 'wb'))
