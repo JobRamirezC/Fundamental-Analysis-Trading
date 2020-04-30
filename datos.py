@@ -190,11 +190,12 @@ def f_ventanas_30_min(df):
     df = f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
     """
     times = np.array([pd.to_datetime(time) for time in df.DateTime])
+    print(times)
     dictionary = {'historicos_sucesos': {}}
     for time in times:
         ticker = 'GBP_USD'
-        fini = time.tz_localize('GMT')
-        ffin = pd.to_datetime(fini + pd.to_timedelta(31, unit='min'))
+        fini = pd.to_datetime("2020-04-27 00:00:00").tz_localize('GMT') # Fecha inicial
+        ffin = ffin = pd.to_datetime("2020-04-28 00:00:00").tz_localize('GMT') # Fecha final
         granularity = "M1"
         df_historicos = f_precios_masivos(p0_fini=fini, p1_ffin=ffin, p2_gran=granularity, p3_inst=ticker,
                                           p4_oatk=entradas.token, p5_ginc=4900)
@@ -202,7 +203,7 @@ def f_ventanas_30_min(df):
         dictionary['historicos_sucesos'][str(time)] = df_historicos
 
     # Guardar datos historicos en formato json par no tener que descargar precios cada ejecucion
-    save_file(dictionary, 'datos/ventanas_historicos.pkl')
+    save_pickle_file(dictionary, 'datos/ventanas_historicos.pkl')
 
     return dictionary
 
@@ -210,11 +211,12 @@ def f_ventanas_30_min(df):
 # -- ----------------------------------------------------------- FUNCION: cargar archivos -- #
 # -- Cargar archivos de historicos e indicador
 
-def f_leer_archivo(file_path: str, columns=None):
+def f_leer_archivo(file_path: str, columns=None, index=None):
     """
     :param file_path: Ubicacion del archivo de informacion de indicador
     :param columns: columnas que se quieran seleccionar del archivo.
                     si se deja en blanco se toman todas las columnas del archivo
+    :param index: name of column for index
     :return: Dataframe de información de archivo validada que este completa
 
     Debugging
@@ -222,10 +224,16 @@ def f_leer_archivo(file_path: str, columns=None):
     file_path = 'datos/Unemployment Rate - United States.csv'
     """
     if columns is None:
-        df_archivo = pd.read_csv(file_path)
+        if index is None:
+            df_archivo = pd.read_csv(file_path)
+        else:
+            df_archivo = pd.read_csv(file_path, index_col=index)
+
     else:
-        df_archivo = pd.read_csv(file_path, usecols=columns)
-    df_archivo = f_validar_info(df=df_archivo)
+        if index is None:
+            df_archivo = pd.read_csv(file_path, usecols=columns)
+        else:
+            df_archivo = pd.read_csv(file_path, usecols=columns, index_col=index)
 
     return df_archivo
 
@@ -254,15 +262,30 @@ def f_validar_info(df):
 
 
 # -- ------------------------------------------------- FUNCION: cargar archivo formato json -- #
-# -- Guardar diccionario de historicos en formato json
+# -- Guardar diccionario de historicos en formato pickle
 
-def load_file(filename):
+def load_pickle_file(filename):
     data = pickle.load(open(filename, 'rb'))
     return data
 
 
 # -- ------------------------------------------------- FUNCION: guardar archivo formato json -- #
-# -- Cargar diccionario de historicos en formato json
+# -- Cargar diccionario de historicos en formato pickle
 
-def save_file(data, filename):
+def save_pickle_file(data, filename):
     pickle.dump(data, open(filename, 'wb'))
+
+
+# -- ------------------------------------------------------- Operacion: Descargar precios -- #
+# -- Descargar precios historicos con OANDA y guardar en csv
+"""
+df = f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv',
+                    columns=['DateTime', 'Actual', 'Consensus', 'Previous'])
+ticker = 'GBP_USD'
+fini = pd.to_datetime(df.DateTime.iloc[-1]).tz_localize('GMT')
+ffin = pd.Timestamp.today(tz='GMT')
+granularity = "M1"
+df_historicos = f_precios_masivos(p0_fini=fini, p1_ffin=ffin, p2_gran=granularity, p3_inst=ticker,
+                                  p4_oatk=entradas.token, p5_ginc=4900)
+df_historicos.to_csv('datos/historicos.csv', index=False)
+"""

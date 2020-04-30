@@ -6,10 +6,8 @@
 # -- ------------------------------------------------------------------------------------ -- #
 
 import proceso as pr
-from datos import load_file, f_precios_masivos
-
-# Descargar datos historicos y guardar
-
+from datos import load_pickle_file, f_leer_archivo
+import visualizaciones as vs
 
 # Leer archivo de historico de indicador
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
@@ -20,4 +18,11 @@ df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate
 df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
 
 # Cargar diccionario
-dict_historicos = load_file('datos/ventanas_historicos.pkl')
+dict_historicos = load_pickle_file('datos/ventanas_historicos.pkl')
+
+
+# Visualizar grafica
+vs_grafica_1 = vs.g_serie_tiempo(df_indicador=df_indicador)
+# Visualizar datos atipicos
+# historicos = f_leer_archivo('datos/historicos.csv', index='TimeStamp')
+# vs_grafica_1 = vs.g_statistics(historicos)
