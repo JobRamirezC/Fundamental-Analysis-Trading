@@ -7,12 +7,24 @@
 
 # Importar librerias
 import datos
+import funciones as fn
+import statsmodels.api as sm
+
+
 # import statsmodels.graphics.tsaplots
 
 # -- ----------------------------------------- FUNCION: Estadisticas de la serie de tiempo -- #
 # -- Encontrar parametros estadisticos de la serie de tiempo
-def f_estadisticas(df_inidicador):
- pass
+def f_estadisticas(df_historicos):
+    """
+    Componente de Autocorrelación y Autocorrelación Parcial
+    Prueba de Heterocedasticidad
+    Prueba de Normalidad
+    Estacionalidad
+    Estacionariedad
+    Detección de Atípico
+    """
+    pass
 
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
@@ -29,33 +41,13 @@ def f_clasificacion_ocurrencias(file_path: str, columns=None):
     file_path = 'datos/Unemployment Rate - United States.csv'
     """
     # Cargar información de archivos
-    df_indicador = datos.f_leer_archivo(file_path=file_path,
-                                        columns=columns)  # Historico de indicador
+    df_indicador = datos.f_leer_archivo(file_path=file_path, columns=columns)  # Historico de indicador
 
-    def condition(actual, consensus, previous):
-        """
-        :param actual: movimiento real del mercado
-        :param consensus: movimiento esperado del mercado
-        :param previous: movimiento anterior del mercado ante la noticia
-        :return: df con escenario A, B, C o D
-
-        Debugging
-        --------
-        actual = 1000
-        consensus = 950
-        previous = 900
-        """
-        if actual >= consensus >= previous:
-            return 'A'
-        elif actual >= consensus < previous:
-            return 'B'
-        elif actual < consensus >= previous:
-            return 'C'
-        else:
-            return 'D'
+    # Verificar que todas las columnas esten llenas y llenar datos faltantes
+    df_indicador = datos.f_validar_info(df_indicador)
 
     # Asignar condicion a cada renglon de las diferentes
-    df_indicador['escenario'] = [condition(row['Actual'], row['Consensus'], row['Previous'])
+    df_indicador['escenario'] = [fn.condition(row['Actual'], row['Consensus'], row['Previous'])
                                  for index, row in df_indicador.iterrows()]
     return df_indicador
 
@@ -66,7 +58,7 @@ def f_clasificacion_ocurrencias(file_path: str, columns=None):
 def f_metricas(df_indicador, load_file: bool = False):
     # obtener diccionario de ventanas de 30 min despues de indicador
     if load_file:
-        dict_historicos = datos.load_file('datos/ventanas_historicos.pkl')
+        dict_historicos = datos.load_pickle_file('datos/ventanas_historicos.pkl')
     else:
         dict_historicos = datos.f_ventanas_30_min(df=df_indicador)
 
