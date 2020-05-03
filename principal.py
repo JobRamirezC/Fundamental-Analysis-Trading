@@ -15,7 +15,7 @@ df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate
 
 # Agregar meticas basicas de ventanas de historicos
 # Si es la primera vez que se corre el codigo: load_file=False
-df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
+df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=False)
 
 # Cargar diccionario
 dict_historicos = load_pickle_file('datos/ventanas_historicos.pkl')
