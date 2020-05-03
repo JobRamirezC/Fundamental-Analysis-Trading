@@ -190,7 +190,6 @@ def f_ventanas_30_min(df):
     df = f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
     """
     times = np.array([pd.to_datetime(time) for time in df.DateTime])
-    print(times)
     dictionary = {'historicos_sucesos': {}}
     for time in times:
         ticker = 'GBP_USD'
