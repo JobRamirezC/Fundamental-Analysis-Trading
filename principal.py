@@ -22,7 +22,7 @@ dict_historicos = load_pickle_file('datos/ventanas_historicos.pkl')
 
 
 # Visualizar grafica
-vs_grafica_1 = vs.g_serie_tiempo(df_indicador=df_indicador)
+vs_grafica_1 = vs.g_serie_tiempo(ventana='2019-06-07 12:30:00')
 # Visualizar datos atipicos
 # historicos = f_leer_archivo('datos/historicos.csv', index='TimeStamp')
 # vs_grafica_1 = vs.g_statistics(historicos)
