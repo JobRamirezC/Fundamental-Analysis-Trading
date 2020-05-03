@@ -9,32 +9,28 @@
 import plotly.graph_objects as go  # Libreria para graficar
 import plotly.io as pio  # renderizador para visualizar imagenes
 from plotly.subplots import make_subplots  # crear subplots con plotly
+import datos
 
 pio.renderers.default = "browser"  # render de imagenes para correr en script
 
 
 # -- ----------------------------------------- Grafica: Serie de tiempo -- #
 # -- Graficar serie de tiempo
-def g_serie_tiempo(df_indicador):
+def g_serie_tiempo(ventana):
     fig = go.Figure()
-    fig.add_trace(go.Scatter(x=df_indicador.DateTime, y=df_indicador.Actual,
-                             mode='lines',
-                             name='Unemployment Rate'))
-    fig.add_shape(dict(type='line',
-                       x0=df_indicador.DateTime[0],
-                       y0=df_indicador.Actual.mean(),
-                       x1=df_indicador.DateTime.iloc[-1],
-                       y1=df_indicador.Actual.mean(),
-                       line=dict(color='red', width=2),
-                       name='Media'))
+    df_ventana = datos.load_pickle_file('datos/ventanas_historicos.pkl')['historicos_sucesos'][ventana]
 
-    fig.update_layout(title={'text': 'Unemployment Rate USA',
+    fig.add_trace(go.Scatter(x=df_ventana.TimeStamp, y=df_ventana.Close,
+                             mode='lines'))
+
+    # Cambiar titulo y ejes
+    fig.update_layout(title={'text': 'Historico GBP_USD',
                              'y': 0.95,
                              'x': 0.5,
                              'xanchor': 'center',
                              'yanchor': 'top'},
                       xaxis_title='Date',
-                      yaxis_title='UR in %',
+                      yaxis_title='$$$',
                       font=dict(
                           family="Courier New, monospace",
                           size=18,
