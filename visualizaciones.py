@@ -9,10 +9,9 @@
 import plotly.graph_objects as go  # Libreria para graficar
 import plotly.io as pio  # renderizador para visualizar imagenes
 from plotly.subplots import make_subplots  # crear subplots con plotly
-import datos
-import numpy as np
-import pandas as pd
-from datetime import datetime
+import datos # funciones carga de datos
+import numpy as np # Manipulacion de datos
+from datetime import datetime # Modificaciones de fechas y formatos
 
 pio.renderers.default = "browser"  # render de imagenes para correr en script
 
@@ -50,7 +49,7 @@ def g_serie_tiempo(ventana):
 
     # anotacion del maximo
     fig.add_annotation(x=df_ventana['TimeStamp'][max_point_index], y=max_point,
-                       text='max = {}'.format(max_point))
+                       text='max = {}'.format(np.round(max_point, 5)))
 
     # minimo de la ventana
     min_point = df_ventana['Low'].min()
@@ -66,7 +65,7 @@ def g_serie_tiempo(ventana):
 
     # anotacion del minimo
     fig.add_annotation(x=df_ventana['TimeStamp'][min_point_index], y=min_point,
-                       text='min = {}'.format(min_point))
+                       text='min = {}'.format(np.round(min_point, 5)))
 
     # volatilidad de la ventana
     fig.add_trace(go.Scatter(x=[df_ventana['TimeStamp'][15], df_ventana['TimeStamp'][15]], y=[max_point, min_point],
@@ -92,14 +91,10 @@ def g_serie_tiempo(ventana):
             size=18,
             color="#7f7f7f"),
         showlegend=True,
-        legend=dict(
-            x=0,
-            y=1,
-            traceorder="normal",
-            bgcolor="LightSkyBlue",
-            bordercolor="Black",
-            borderwidth=1
-        )
+        legend=dict(traceorder="normal",
+                    bgcolor="LightSkyBlue",
+                    bordercolor="Black",
+                    borderwidth=1)
     )
 
     fig.update_xaxes(rangeslider_visible=False)

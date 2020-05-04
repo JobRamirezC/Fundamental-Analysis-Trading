@@ -262,6 +262,7 @@ def f_validar_info(df):
     df = df.dropna()
     df['DateTime'] = pd.to_datetime(df['DateTime'])
     df = df.sort_values(by=['DateTime'])
+    df.reset_index(inplace=True)
     return df
 
 

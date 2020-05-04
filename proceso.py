@@ -14,20 +14,21 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 import matplotlib.pyplot
 import visualizaciones as vs
+from scipy.stats import shapiro
 
 
 # import statsmodels.graphics.tsaplots
 
-# -- ----------------------------------------- FUNCION: Estadisticas de la serie de tiempo -- #
-# -- Encontrar parametros estadisticos de la serie de tiempo
+# -- ----------------------------------------- FUNCION: Dicky Fuller Aumentada -- #
+# -- Encontrar estacionariedad de la serie
 def f_a_dicky_fuller(df_indicador):
     """
-    Componente de Autocorrelación y Autocorrelación Parcial
-    Prueba de Heterocedasticidad
-    Prueba de Normalidad
-    Estacionalidad
-    Estacionariedad
-    Detección de Atípico
+    :param df_indicador: dataframe de serie de tiempo indicador
+    :return: pueba dick fuller aumentada e impresion de parametros hasta rechazar H0. nivelde confianza 95%
+
+    Debugging
+    --------
+    df_indicador = datos.f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
     """
     serie = df_indicador
     a_dicky_fuller = adfuller(serie.Actual)
@@ -51,6 +52,33 @@ def f_a_dicky_fuller(df_indicador):
         i += 1
     return a_dicky_fuller
 
+
+# -- ----------------------------------------- FUNCION: Normalidad -- #
+# -- Encontrar si la serie es normal
+
+def f_normalidad(df_indicador):
+    """
+    :param df_indicador: dataframe de la serie de tiempo del indicador
+    :return: informacion de la prueba de shapiro (t-stat y p-value)
+
+    Debugging
+    --------
+    df_indicador = datos.f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
+    """
+    shapiro_results = shapiro(df_indicador.Actual)
+    print('Prueba de normalidad: \n'
+          ' H0: La serie es normal \n'
+          ' H1: La serie no es normal \n')
+    if shapiro_results[1] <= 0.05:
+        print('Se rechaza la H0, la serie no es normal')
+    else:
+        print('Se acepta la H0, la serie es normal')
+
+    return shapiro_results
+
+
+# -- ----------------------------------------- FUNCION: ARCH -- #
+# -- Encontrar autoregresion
 
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
@@ -93,6 +121,10 @@ def f_metricas(df_indicador, load_file: bool = False):
         - Pips_alcistas: cantidad de pips que subio la ventana
         - Pips_bajistas: cantidad de pips que bajo la ventana
         - volatilidad diferencia entre maximo y minimo de la ventana
+
+    Debugging
+    --------
+    df_indicador = datos.f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
     """
     # obtener diccionario de ventanas de 30 min despues de indicador
     if load_file:
