@@ -8,6 +8,7 @@
 import proceso as pr
 from datos import load_pickle_file, f_leer_archivo
 import visualizaciones as vs
+import pandas as pd
 
 # Leer archivo de historico de indicador
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
@@ -62,3 +63,14 @@ vs_grafica_6 = vs.g_serie_indicador(df_serie=df_indicador)
 
 # Visualizar datos atipicos
 vs_grafica_7 = vs.g_box_atipicos(df_indicador=df_indicador)
+
+# %% optimizacion y backtest
+capital_inicial = 100000
+maximo_riesgo = 1000
+df_escenarios = df_indicador[['DateTime', 'escenario', 'direccion', 'pips_alcistas', 'pips_bajistas', 'volatilidad']]
+
+df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
+                              'operacion': ['nan', 'nan', 'nan', 'nan'],
+                              'sl': ['nan', 'nan', 'nan', 'nan'],
+                              'tp': ['nan', 'nan', 'nan', 'nan'],
+                              'volumen': ['nan', 'nan', 'nan', 'nan']})

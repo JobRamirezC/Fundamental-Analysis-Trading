@@ -251,7 +251,8 @@ def f_validar_info(df):
 
     Debugging
     --------
-    df = f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
+    df = f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv',
+                        columns=['DateTime', 'Actual', 'Consensus', 'Previous'])
 
     """
     for i in range(0, len(df.index)):
@@ -261,8 +262,8 @@ def f_validar_info(df):
             df.Consensus[i] = df.Previous[i]
     df = df.dropna()
     df['DateTime'] = pd.to_datetime(df['DateTime'])
-    df = df.sort_values(by=['DateTime'])
-    df.reset_index(inplace=True)
+    df.sort_values(by=['DateTime'], inplace=True)
+    df.reset_index(drop=True, inplace=True)
     return df
 
 
