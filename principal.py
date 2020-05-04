@@ -27,10 +27,38 @@ vs_grafica_1 = vs.g_serie_indicador(df_serie=df_indicador)
 dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)
 
 # Visualizar grafica
-vs_grafica_2 = vs.g_serie_tiempo(ventana='2019-06-07 12:30:00')
+"""
+Conclusión GRAPH 1: 
+"""
+# Formato fecha: aaaa/mm/dd HH:MM:SS
+vs_grafica_1 = vs.g_serie_tiempo(ventana='2020-01-10 13:30:00')
+
+"""
+Conclusión GRAPH 2: 
+"""
+# Formato fecha: aaaa/mm/dd HH:MM:SS
+vs_grafica_2 = vs.g_serie_tiempo(ventana='2019-12-06 13:30:00')
+
+"""
+Conclusión GRAPH 3: 
+"""
+# Formato fecha: aaaa/mm/dd HH:MM:SS
+vs_grafica_3 = vs.g_serie_tiempo(ventana='2019-10-04 12:30:00')
+
+"""
+Conclusión GRAPH 4: 
+"""
+# Formato fecha: aaaa/mm/dd HH:MM:SS
+vs_grafica_4 = vs.g_serie_tiempo(ventana='2018-11-02 12:30:00')
+
+"""
+Conclusión GRAPH 5: 
+"""
+# Formato fecha: aaaa/mm/dd HH:MM:SS
+vs_grafica_5 = vs.g_serie_tiempo(ventana='2018-06-01 12:30:00')
 
 # Visualizar serie de tiempo indicador transformada para estacionariedad
-vs_grafica_3 = vs.g_serie_indicador(df_serie=df_indicador)
+vs_grafica_6 = vs.g_serie_indicador(df_serie=df_indicador)
 
 # Visualizar datos atipicos
-vs_grafica_4 = vs.g_box_atipicos(df_indicador=df_indicador)
+vs_grafica_7 = vs.g_box_atipicos(df_indicador=df_indicador)
