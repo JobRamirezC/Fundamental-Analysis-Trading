@@ -193,8 +193,8 @@ def f_ventanas_30_min(df):
     dictionary = {'historicos_sucesos': {}}
     for time in times:
         ticker = 'GBP_USD'
-        fini = pd.to_datetime("2020-04-27 00:00:00").tz_localize('GMT') # Fecha inicial
-        ffin = ffin = pd.to_datetime("2020-04-28 00:00:00").tz_localize('GMT') # Fecha final
+        fini = time.tz_localize('GMT')  # Fecha inicial
+        ffin = pd.to_datetime(fini + pd.to_timedelta(31, unit='min'))  # Fecha final
         granularity = "M1"
         df_historicos = f_precios_masivos(p0_fini=fini, p1_ffin=ffin, p2_gran=granularity, p3_inst=ticker,
                                           p4_oatk=entradas.token, p5_ginc=4900)
