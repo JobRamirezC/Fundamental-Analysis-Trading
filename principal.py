@@ -20,10 +20,17 @@ df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
 # Cargar diccionario
 dict_historicos = load_pickle_file('datos/ventanas_historicos.pkl')
 
+# Visualizar datos antes de pruebas estadisticas
+vs_grafica_1 = vs.g_serie_indicador(df_serie=df_indicador)
+
+# Prueba dicky fuller para revisar estacionariedad
+dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)
 
 # Visualizar grafica
-vs_grafica_1 = vs.g_serie_tiempo(ventana='2019-06-07 12:30:00')
+vs_grafica_2 = vs.g_serie_tiempo(ventana='2019-06-07 12:30:00')
 
+# Visualizar serie de tiempo indicador transformada para estacionariedad
+vs_grafica_3 = vs.g_serie_indicador(df_serie=df_indicador)
 
 # Visualizar datos atipicos
-vs_grafica_2 = vs.g_statistics(df_indicador=df_indicador)
+vs_grafica_4 = vs.g_box_atipicos(df_indicador=df_indicador)
