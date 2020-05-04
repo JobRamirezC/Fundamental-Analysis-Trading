@@ -11,6 +11,7 @@ import plotly.io as pio  # renderizador para visualizar imagenes
 from plotly.subplots import make_subplots  # crear subplots con plotly
 import datos
 import numpy as np
+from datetime import datetime
 
 pio.renderers.default = "browser"  # render de imagenes para correr en script
 
@@ -33,9 +34,10 @@ def g_serie_tiempo(ventana):
                                  low=df_ventana['Low'], close=df_ventana['Close'],
                                  name='Exchange Rate'))
 
+    # maximo de la ventana
     max_point = df_ventana['High'].max()
-    if max_point > df_ventana['Open'][0]:
-        max_point_index = df_ventana['High'].idxmax(axis=0)
+    max_point_index = df_ventana['High'].idxmax(axis=0)
+    if max_point > df_ventana['Open'][0] and max_point_index != 0:
         m = (max_point - df_ventana['Open'][0]) / (max_point_index - df_ventana.index[0])
         O2H_values = np.array([i * m + df_ventana['Open'][0] for i in range(0, max_point_index + 1)])
         O2H_dates = np.array([df_ventana['TimeStamp'][i] for i in range(0, max_point_index + 1)])
@@ -43,9 +45,14 @@ def g_serie_tiempo(ventana):
                                  mode='lines',
                                  name='Open to Max'))
 
+    # anotacion del maximo
+    fig.add_annotation(x=df_ventana['TimeStamp'][max_point_index], y=max_point,
+                       text='max = {}'.format(max_point))
+
+    # minimo de la ventana
     min_point = df_ventana['Low'].min()
-    if min_point < df_ventana['Open'][0]:
-        min_point_index = df_ventana['Low'].idxmin(axis=0)
+    min_point_index = df_ventana['Low'].idxmin(axis=0)
+    if min_point < df_ventana['Open'][0] and min_point_index != 0:
         m = (min_point - df_ventana['Open'][0]) / (min_point_index - df_ventana.index[0])
         O2L_values = np.array([i * m + df_ventana['Open'][0] for i in range(0, min_point_index + 1)])
         O2L_dates = np.array([df_ventana['TimeStamp'][i] for i in range(0, min_point_index + 1)])
@@ -53,22 +60,35 @@ def g_serie_tiempo(ventana):
                                  mode='lines',
                                  name='Open to Min'))
 
+    # anotacion del minimo
+    fig.add_annotation(x=df_ventana['TimeStamp'][min_point_index], y=min_point,
+                       text='min = {}'.format(min_point))
+
+    # volatilidad de la ventana
     fig.add_trace(go.Scatter(x=[df_ventana['TimeStamp'][15], df_ventana['TimeStamp'][15]], y=[max_point, min_point],
                              mode='lines',
                              name='Volatility'))
+
+    # anotacion de volatilidad
+    fig.add_annotation(x=df_ventana['TimeStamp'][15], y=(max_point + min_point) / 2,
+                       text='Volatilidad en pips = {}'.format(np.round((max_point - min_point) * 10000), 2))
+
     # Cambiar titulo y ejes
-    fig.update_layout(title={'text': 'Historico GBP_USD OHLC',
-                             'y': 0.95,
-                             'x': 0.5,
-                             'xanchor': 'center',
-                             'yanchor': 'top'},
-                      xaxis_title='Date',
-                      yaxis_title='$$$',
-                      font=dict(
-                          family="Courier New, monospace",
-                          size=18,
-                          color="#7f7f7f"),
-                      showlegend=True)
+    fig.update_layout(title={'text': 'Historico GBP_USD OHLC {}'.format(
+        datetime.strptime(ventana, '%Y-%m-%d %H:%M:%S').strftime('%d %b %Y')),
+        'y': 0.95,
+        'x': 0.5,
+        'xanchor': 'center',
+        'yanchor': 'top'},
+        xaxis_title='Time',
+        yaxis_title='$$$',
+        font=dict(
+            family="Courier New, monospace",
+            size=18,
+            color="#7f7f7f"),
+        showlegend=True)
+
+    fig.update_xaxes(rangeslider_visible=False)
     fig.show()
 
 

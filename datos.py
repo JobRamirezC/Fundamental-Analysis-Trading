@@ -193,11 +193,14 @@ def f_ventanas_30_min(df):
     dictionary = {'historicos_sucesos': {}}
     for time in times:
         ticker = 'GBP_USD'
-        fini = time.tz_localize('GMT')  # Fecha inicial
-        ffin = pd.to_datetime(fini + pd.to_timedelta(31, unit='min'))  # Fecha final
+        if time.hour == 13:
+            fini = pd.to_datetime(time + pd.to_timedelta(-5, unit='hour'))
+        else:
+            fini = pd.to_datetime(time + pd.to_timedelta(-4, unit='hour'))
+        ffin = pd.to_datetime(fini + pd.to_timedelta(1, unit='hour'))  # Fecha final
         granularity = "M1"
         df_historicos = f_precios_masivos(p0_fini=fini, p1_ffin=ffin, p2_gran=granularity, p3_inst=ticker,
-                                          p4_oatk=entradas.token, p5_ginc=4900)
+                                          p4_oatk=entradas.token, p5_ginc=4900).iloc[:30]
 
         dictionary['historicos_sucesos'][str(time)] = df_historicos
 
