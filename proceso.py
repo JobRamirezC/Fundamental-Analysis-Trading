@@ -80,6 +80,9 @@ def f_normalidad(df_indicador):
 # -- ----------------------------------------- FUNCION: ARCH -- #
 # -- Encontrar autoregresion
 
+def f_heterocerasticidad(df_indicador):
+    pass
+
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
 # -- Cargar archivo de historico indicador y clasificar cada ocurrencia
