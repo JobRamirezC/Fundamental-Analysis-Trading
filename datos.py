@@ -260,6 +260,8 @@ def f_validar_info(df):
         if df.Consensus[i] == 0:
             df.Consensus[i] = df.Previous[i]
     df = df.dropna()
+    df['DateTime'] = pd.to_datetime(df['DateTime'])
+    df = df.sort_values(by=['DateTime'])
     return df
 
 

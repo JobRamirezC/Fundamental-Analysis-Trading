@@ -11,6 +11,7 @@ import plotly.io as pio  # renderizador para visualizar imagenes
 from plotly.subplots import make_subplots  # crear subplots con plotly
 import datos
 import numpy as np
+import pandas as pd
 from datetime import datetime
 
 pio.renderers.default = "browser"  # render de imagenes para correr en script
@@ -18,6 +19,7 @@ pio.renderers.default = "browser"  # render de imagenes para correr en script
 
 # -- ----------------------------------------- Grafica: Serie de tiempo -- #
 # -- Graficar serie de tiempo
+
 def g_serie_tiempo(ventana):
     """
     :param ventana: fecha en la que se emitio el indicador en formato 'aaaa/mm/dd HH:MM:SS'
@@ -43,7 +45,8 @@ def g_serie_tiempo(ventana):
         O2H_dates = np.array([df_ventana['TimeStamp'][i] for i in range(0, max_point_index + 1)])
         fig.add_trace(go.Scatter(x=O2H_dates, y=O2H_values,
                                  mode='lines',
-                                 name='Open to Max'))
+                                 name='Open to Max',
+                                 marker_color='rgb(0,250,0)'))
 
     # anotacion del maximo
     fig.add_annotation(x=df_ventana['TimeStamp'][max_point_index], y=max_point,
@@ -58,7 +61,8 @@ def g_serie_tiempo(ventana):
         O2L_dates = np.array([df_ventana['TimeStamp'][i] for i in range(0, min_point_index + 1)])
         fig.add_trace(go.Scatter(x=O2L_dates, y=O2L_values,
                                  mode='lines',
-                                 name='Open to Min'))
+                                 name='Open to Min',
+                                 marker_color='rgb(250,0,0)'))
 
     # anotacion del minimo
     fig.add_annotation(x=df_ventana['TimeStamp'][min_point_index], y=min_point,
@@ -67,7 +71,8 @@ def g_serie_tiempo(ventana):
     # volatilidad de la ventana
     fig.add_trace(go.Scatter(x=[df_ventana['TimeStamp'][15], df_ventana['TimeStamp'][15]], y=[max_point, min_point],
                              mode='lines',
-                             name='Volatility'))
+                             name='Volatility',
+                             marker_color='rgb(128,0,128)'))
 
     # anotacion de volatilidad
     fig.add_annotation(x=df_ventana['TimeStamp'][15], y=(max_point + min_point) / 2,
@@ -86,7 +91,16 @@ def g_serie_tiempo(ventana):
             family="Courier New, monospace",
             size=18,
             color="#7f7f7f"),
-        showlegend=True)
+        showlegend=True,
+        legend=dict(
+            x=0,
+            y=1,
+            traceorder="normal",
+            bgcolor="LightSkyBlue",
+            bordercolor="Black",
+            borderwidth=1
+        )
+    )
 
     fig.update_xaxes(rangeslider_visible=False)
     fig.show()
@@ -94,14 +108,15 @@ def g_serie_tiempo(ventana):
 
 # -- ----------------------------------------- Grafica: Datos atípicos -- #
 # -- Graficar para detectar valores atípicos de la serie
-def g_statistics(df_indicador):
+
+def g_box_atipicos(df_indicador):
     """
     :param df_indicador:
     :return:
 
     Debugging
     --------
-    ventana='2019-06-07 12:30:00'
+    df_indicador = datos.f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
     """
     fig = go.Figure()
     # Box Actual
@@ -115,7 +130,7 @@ def g_statistics(df_indicador):
                                  outlierwidth=2)),
                          line_color='rgb(8,81,156)',
                          name='Actual'))
-
+    """
     # Box Consensus
     fig.add_trace(go.Box(y=df_indicador['Consensus'],
                          boxpoints='suspectedoutliers',  # only suspected outliers
@@ -127,17 +142,49 @@ def g_statistics(df_indicador):
                                  outlierwidth=2)),
                          line_color='rgb(0,200,85)',
                          name='Consensus'))
+    """
     # Cambiar titulo y ejes
-    fig.update_layout(title={'text': 'Distribucion Datos',
+    fig.update_layout(title={'text': 'Distribucion Datos y deteccion de atipicos',
                              'y': 0.95,
                              'x': 0.5,
                              'xanchor': 'center',
                              'yanchor': 'top'},
                       xaxis_title='Serie',
-                      yaxis_title='Tasa de Desempleo en %',
+                      yaxis_title='Tasa de desempleo transformada',
                       font=dict(
                           family="Courier New, monospace",
                           size=18,
                           color="#7f7f7f"),
-                      showlegend=True)
+                      showlegend=False)
+    fig.show()
+
+
+# -- ----------------------------------------- Grafica: Estadisticas -- #
+# -- Graficar estacionariedad , residuales y tendencia
+
+def g_serie_indicador(df_serie):
+    """
+    :param df_serie: Dataframe de la serie de tiempo del indicador
+    :return: grafica con indicador y datos clave
+
+    Debugging
+    --------
+    df_serie = datos.f_leer_archivo(file_path='datos/Unemployment Rate - United States.csv')
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df_serie['DateTime'], y=df_serie['Actual'],
+                             mode='lines'))
+    # Cambiar titulo y ejes
+    fig.update_layout(title={'text': 'Unemployment Rate USA',
+                             'y': 0.95,
+                             'x': 0.5,
+                             'xanchor': 'center',
+                             'yanchor': 'top'},
+                      xaxis_title='Time',
+                      yaxis_title='%',
+                      font=dict(
+                          family="Courier New, monospace",
+                          size=18,
+                          color="#7f7f7f"),
+                      showlegend=False)
     fig.show()

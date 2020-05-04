@@ -8,14 +8,19 @@
 # Importar librerias
 import datos
 import funciones as fn
-import statsmodels.api as sm
+import pandas as pd
+import numpy as np
+from statsmodels.tsa.seasonal import seasonal_decompose
+from statsmodels.tsa.stattools import adfuller
+import matplotlib.pyplot
+import visualizaciones as vs
 
 
 # import statsmodels.graphics.tsaplots
 
 # -- ----------------------------------------- FUNCION: Estadisticas de la serie de tiempo -- #
 # -- Encontrar parametros estadisticos de la serie de tiempo
-def f_estadisticas(df_historicos):
+def f_a_dicky_fuller(df_indicador):
     """
     Componente de Autocorrelación y Autocorrelación Parcial
     Prueba de Heterocedasticidad
@@ -24,7 +29,28 @@ def f_estadisticas(df_historicos):
     Estacionariedad
     Detección de Atípico
     """
-    pass
+    serie = df_indicador
+    a_dicky_fuller = adfuller(serie.Actual)
+    print('ADF Statistic: %f' % a_dicky_fuller[0])
+    print('p-value: %f' % a_dicky_fuller[1])
+    print('Critical Values:')
+    for key, value in a_dicky_fuller[4].items():
+        print('\t%s: %.3f' % (key, value))
+
+    i = 1
+    while a_dicky_fuller[1] > 0.05:
+        serie['Actual'] = serie['Actual'].diff()
+        serie.dropna(inplace=True)
+        a_dicky_fuller = adfuller(serie.Actual)
+        print('\n Transformada {}'.format(i))
+        print('ADF Statistic: %f' % a_dicky_fuller[0])
+        print('p-value: %f' % a_dicky_fuller[1])
+        print('Critical Values:')
+        for key, value in a_dicky_fuller[4].items():
+            print('\t%s: %.3f' % (key, value))
+        i += 1
+    return a_dicky_fuller
+
 
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #
