@@ -17,14 +17,14 @@ df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate
 # Si es la primera vez que se corre el codigo: load_file=False
 df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
 
-# Cargar diccionario
-dict_historicos = load_pickle_file('datos/ventanas_historicos.pkl')
-
 # Visualizar datos antes de pruebas estadisticas
-vs_grafica_1 = vs.g_serie_indicador(df_serie=df_indicador)
+vs_grafica_1_estadistica = vs.g_serie_indicador(df_serie=df_indicador)
 
 # Prueba dicky fuller para revisar estacionariedad
 dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)
+
+# Prueba de normalidad
+shapiro_results = pr.f_normalidad(df_indicador=df_indicador)
 
 # Visualizar grafica
 """
