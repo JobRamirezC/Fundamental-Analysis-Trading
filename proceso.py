@@ -56,6 +56,18 @@ def f_clasificacion_ocurrencias(file_path: str, columns=None):
 # -- Cargar archivo de historico indicador y clasificar cada ocurrencia
 
 def f_metricas(df_indicador, load_file: bool = False):
+    """
+    :param df_indicador: data frame con los datos de cuando se reporto el indicador y las columnas
+        - Actual
+        - Consensus
+        - Previous
+    :param load_file: Cargar un archivo con los datos historicos
+    :return: mismo dataframe con las sigueintes metricas
+        - Direccion: 1 = alcista, -1 = bajista
+        - Pips_alcistas: cantidad de pips que subio la ventana
+        - Pips_bajistas: cantidad de pips que bajo la ventana
+        - volatilidad diferencia entre maximo y minimo de la ventana
+    """
     # obtener diccionario de ventanas de 30 min despues de indicador
     if load_file:
         dict_historicos = datos.load_pickle_file('datos/ventanas_historicos.pkl')
