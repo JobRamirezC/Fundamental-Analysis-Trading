@@ -27,6 +27,9 @@ dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)
 # Prueba de normalidad
 shapiro_results = pr.f_normalidad(df_indicador=df_indicador)
 
+# Prueba de heterocerasticidad
+arch_results = pr.f_heterocerasticidad(df_indicador = df_indicador)
+
 # Visualizar grafica
 """
 Conclusión GRAPH 1: 

@@ -12,6 +12,7 @@ import pandas as pd
 import numpy as np
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
+from statsmodels.stats.diagnostic import het_arch
 import matplotlib.pyplot
 import visualizaciones as vs
 from scipy.stats import shapiro
@@ -81,6 +82,17 @@ def f_normalidad(df_indicador):
 # -- Encontrar autoregresion
 
 def f_heterocerasticidad(df_indicador):
+    """
+    
+    Parameters
+    ----------
+    df_indicador
+
+    Returns
+    -------
+
+    """
+    test = het_arch(df_indicador.Actual)
     pass
 
 
