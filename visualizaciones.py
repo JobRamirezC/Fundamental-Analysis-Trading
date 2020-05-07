@@ -9,9 +9,11 @@
 import plotly.graph_objects as go  # Libreria para graficar
 import plotly.io as pio  # renderizador para visualizar imagenes
 from plotly.subplots import make_subplots  # crear subplots con plotly
-import datos # funciones carga de datos
-import numpy as np # Manipulacion de datos
-from datetime import datetime # Modificaciones de fechas y formatos
+import datos  # funciones carga de datos
+import numpy as np  # Manipulacion de datos
+from datetime import datetime  # Modificaciones de fechas y formatos
+import pandas as pd
+from funciones import conclusiones_generales  # Conclusiones generales para las ventanas observadas
 
 pio.renderers.default = "browser"  # render de imagenes para correr en script
 
@@ -100,6 +102,11 @@ def g_serie_tiempo(ventana):
     fig.update_xaxes(rangeslider_visible=False)
     fig.show()
 
+    conclusion_grl = conclusiones_generales(df_ventana=df_ventana, fecha=ventana)
+    print(conclusion_grl)
+
+    return [fig, conclusion_grl]
+
 
 # -- ----------------------------------------- Grafica: Datos atípicos -- #
 # -- Graficar para detectar valores atípicos de la serie
@@ -153,6 +160,8 @@ def g_box_atipicos(df_indicador):
                       showlegend=False)
     fig.show()
 
+    return fig
+
 
 # -- ----------------------------------------- Grafica: Estadisticas -- #
 # -- Graficar estacionariedad , residuales y tendencia
@@ -183,3 +192,54 @@ def g_serie_indicador(df_serie):
                           color="#7f7f7f"),
                       showlegend=False)
     fig.show()
+
+    return fig
+
+
+# -- ----------------------------------------- Grafica: DEscomposicion estacional -- #
+# -- Graficar estacionalidad, residuos observados  y tendencia
+
+def g_estacionalidad_descompuesta(object):
+    """
+    :param object: objeto de descomposicion de la formula de descomposicion de statsmodels
+    :return: grafica de estacionalidad, residuales y tendencia
+
+    Debugging
+    --------
+    object = estacionalidad
+    """
+    seasonal = pd.DataFrame(object.seasonal)
+    observed = pd.DataFrame(object.observed)
+    resid = pd.DataFrame(object.resid)
+    trend = pd.DataFrame(object.trend)
+
+    fig = make_subplots(rows=4, cols=1, shared_xaxes=True, subplot_titles=['Datos Observados', 'Tendencia',
+                                                                           'Estacionalidad', 'Residuales'],
+                        x_title='Tiempo (meses)')
+
+    # Datos observados
+    fig.add_trace(go.Scatter(y=observed.Actual), row=1, col=1)
+
+    # Tendencia de datos
+    fig.add_trace(go.Scatter(y=trend.trend), row=2, col=1)
+
+    # Estacionalidad
+    fig.add_trace(go.Scatter(y=seasonal.seasonal), row=3, col=1)
+
+    # Residuales
+    fig.add_trace(go.Scatter(y=resid.resid), row=4, col=1)
+
+    fig.update_layout(title={'text': 'Descomposicion serie de tiempo',
+                             'y': 0.95,
+                             'x': 0.5,
+                             'xanchor': 'center',
+                             'yanchor': 'top'},
+                      font=dict(
+                          family="Courier New, monospace",
+                          size=18,
+                          color="#7f7f7f"),
+                      showlegend=False)
+
+    fig.show()
+
+    return fig

@@ -13,9 +13,8 @@ import numpy as np
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.diagnostic import het_arch
-import matplotlib.pyplot
-import visualizaciones as vs
 from scipy.stats import shapiro
+
 
 
 # import statsmodels.graphics.tsaplots
@@ -51,6 +50,7 @@ def f_a_dicky_fuller(df_indicador):
         for key, value in a_dicky_fuller[4].items():
             print('\t%s: %.3f' % (key, value))
         i += 1
+        serie.reset_index(inplace=True)
     return a_dicky_fuller
 
 
@@ -81,7 +81,7 @@ def f_normalidad(df_indicador):
 # -- ----------------------------------------- FUNCION: ARCH -- #
 # -- Encontrar autoregresion
 
-def f_heterocerasticidad(df_indicador):
+def f_heterocerasticidad(df_residuals):
     """
     
     Parameters
@@ -92,8 +92,24 @@ def f_heterocerasticidad(df_indicador):
     -------
 
     """
-    test = het_arch(df_indicador.Actual)
+    arch = het_arch(df_residuals)
     pass
+
+
+# -- ----------------------------------------- FUNCION: Estacionalidad -- #
+# -- Encontrar estacionalidad
+
+def f_estacionalidad(df_indicador):
+    """
+    :param df_indicador: datos del indicador que sean estacionarios
+    :return: descomposicion de la serie para ver estacionalidad
+
+    Debugging
+    --------
+    df_indicaros = df_indicador
+    """
+    resultado = seasonal_decompose(df_indicador['Actual'], period=1)
+    return resultado
 
 
 # -- --------------------------------------------------------- FUNCION: Cargar y clasificar -- #

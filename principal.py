@@ -6,7 +6,6 @@
 # -- ------------------------------------------------------------------------------------ -- #
 
 import proceso as pr
-from datos import load_pickle_file, f_leer_archivo
 import visualizaciones as vs
 import pandas as pd
 
@@ -27,8 +26,11 @@ dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)
 # Prueba de normalidad
 shapiro_results = pr.f_normalidad(df_indicador=df_indicador)
 
-# Prueba de heterocerasticidad
-arch_results = pr.f_heterocerasticidad(df_indicador = df_indicador)
+# Prueba de estacionalidad
+estacionalidad = pr.f_estacionalidad(df_indicador=df_indicador)
+
+# Visualizar estacionalidad
+vs_grafica_estacionalidad = vs.g_estacionalidad_descompuesta(object=estacionalidad)
 
 # Visualizar grafica
 """
@@ -77,3 +79,18 @@ df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
                               'sl': ['nan', 'nan', 'nan', 'nan'],
                               'tp': ['nan', 'nan', 'nan', 'nan'],
                               'volumen': ['nan', 'nan', 'nan', 'nan']})
+
+# Separar datos en entrenamiento y prueba
+start = pd.to_datetime('01/01/2009')  # Fecha de inicio datos de entrenamiento
+split = pd.to_datetime('01/01/2019')  # Fecha que separa datos de entrenamiento y prueba
+
+# Separar entrenameinto
+train = df_escenarios.loc[df_escenarios['DateTime'] <= split]
+train = df_escenarios.loc[train['DateTime'] >= start]
+
+
+end = pd.to_datetime('01/01/2020')  # Fecha de fin datos entrenamiento
+
+# Separar pprueba
+test = df_escenarios.loc[df_escenarios['DateTime'] > split]
+test = df_escenarios.loc[test['DateTime'] <= end]
