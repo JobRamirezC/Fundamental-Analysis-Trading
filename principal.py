@@ -16,10 +16,6 @@ import numpy as np
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
                                               columns=['DateTime', 'Actual', 'Consensus', 'Previous'])
 
-# Agregar meticas basicas de ventanas de historicos
-# Si es la primera vez que se corre el codigo: load_file=False
-df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
-
 # Visualizar datos antes de pruebas estadisticas
 vs_grafica_1_estadistica = vs.g_serie_indicador(df_serie=df_indicador)
 
@@ -54,6 +50,9 @@ Conclusión GRAPH 5:
 # Formato fecha: aaaa/mm/dd HH:MM:SS
 vs_grafica_5 = vs.g_serie_tiempo(ventana='2018-06-01 12:30:00')
 
+# Agregar meticas basicas de ventanas de historicos
+# Si es la primera vez que se corre el codigo: load_file=False
+df_indicador = pr.f_metricas(df_indicador=df_indicador, load_file=True)
 
 # Prueba dicky fuller para revisar estacionariedad
 dicky_fuller = pr.f_a_dicky_fuller(df_indicador=df_indicador)

@@ -67,8 +67,10 @@ def f_normalidad(df_indicador):
           ' H0: La serie es normal \n'
           ' H1: La serie no es normal \n')
     if shapiro_results[1] <= 0.05:
+        print('P-value: {}'.format(shapiro_results[1]))
         print('Se rechaza la H0, la serie no es normal')
     else:
+        print('P-value: {}'.format(shapiro_results[1]))
         print('Se acepta la H0, la serie es normal')
 
     return shapiro_results
