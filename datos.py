@@ -262,7 +262,7 @@ def f_validar_info(df):
             df.Consensus[i] = df.Previous[i]
     df = df.dropna()
     df.loc[:, 'DateTime'] = pd.to_datetime(df['DateTime'])
-    df.sort_values(by=['DateTime'], inplace=True)
+    df = df.sort_values(by=['DateTime'])
     df.reset_index(drop=True, inplace=True)
     return df
 
