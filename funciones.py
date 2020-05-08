@@ -83,6 +83,8 @@ def sharp(df_portfolio, rf: float = 0.08):
 
     Debugging
     --------
+    df_portfolio = df_backtest
+    rf = 0.08
     """
     log_returns = np.log(df_portfolio.capital_acm / df_portfolio.capital_acm.shift()).dropna()
     port_ret = np.sum(log_returns)
