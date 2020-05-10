@@ -5,12 +5,12 @@
 # -- repositorio: https://github.com/manuelpintado/Proyecto_Equipo_6.git
 # -- ------------------------------------------------------------------------------------ -- #
 
+# Importat librerias
 import proceso as pr
 import visualizaciones as vs
 import pandas as pd
 from funciones import sharp
-import time
-import numpy as np
+
 
 # Leer archivo de historico de indicador
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
@@ -78,7 +78,7 @@ maximo_riesgo = 1000
 df_escenarios = df_indicador[['DateTime', 'escenario', 'direccion', 'pips_alcistas', 'pips_bajistas', 'volatilidad']]
 
 df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
-                              'operacion': ['sell', 'buy', 'sell', 'buy'],
+                              'operacion': ['sell', 'buy', 'buy', 'buy'],
                               'sl': [100, 100, 100, 100],
                               'tp': [200, 200, 200, 200],
                               'volumen': [100000, 100000, 100000, 100000]})
@@ -100,10 +100,7 @@ test = test.loc[test['DateTime'] <= end]
 test.reset_index(inplace=True, drop=True)
 
 # Hacer backtest
-inicio = time.time()
-df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_escenarios=train, inversion_inicial=capital_inicial)
-fin = time.time()
-print('El backtest tomo {} segundos'.format(np.round(fin - inicio, 0)))
+df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
 
 # Calcular radio de Sharp
 sharp = sharp(df_portfolio=df_backtest)

@@ -90,4 +90,5 @@ def sharp(df_portfolio, rf: float = 0.08):
     port_ret = np.sum(log_returns)
     port_std = log_returns.std()
     sharp = (port_ret - rf) / port_std
+
     return sharp
