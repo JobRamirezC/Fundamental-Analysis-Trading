@@ -9,7 +9,10 @@
 import proceso as pr
 import visualizaciones as vs
 import pandas as pd
-from funciones import sharp
+import funciones as fn
+from ypstruct import structure
+import datos
+
 
 
 # Leer archivo de historico de indicador
@@ -78,7 +81,7 @@ maximo_riesgo = 1000
 df_escenarios = df_indicador[['DateTime', 'escenario', 'direccion', 'pips_alcistas', 'pips_bajistas', 'volatilidad']]
 
 df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
-                              'operacion': ['sell', 'buy', 'buy', 'buy'],
+                              'operacion': ['sell', 'buy', 'sell', 'buy'],
                               'sl': [100, 100, 100, 100],
                               'tp': [200, 200, 200, 200],
                               'volumen': [100000, 100000, 100000, 100000]})
@@ -103,4 +106,38 @@ test.reset_index(inplace=True, drop=True)
 df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
 
 # Calcular radio de Sharp
-sharp = sharp(df_portfolio=df_backtest)
+sharpe_value = fn.sharpe(df_portfolio=df_backtest)
+
+# Optimizar modelo
+problem = structure()
+problem.costfunc = fn.sharpe
+problem.backtest = pr.f_backtest
+problem.data = train
+problem.init_invest = capital_inicial
+problem.nvar = 12
+problem.varmin = [10, 10, 1000, 10, 10, 1000, 10, 10, 1000, 10, 10, 1000]
+problem.varmax = [15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000]
+
+# GA Parameters
+params = structure()
+params.maxit = 5
+params.npop = 60
+params.beta = 1
+params.pc = 4
+params.gamma = 0.1
+params.mu = 0.15
+params.sigma = 1
+
+# Run GA
+print('------------------------')
+print('Optimizacion del ratio de sharpe')
+print('------------------------')
+
+out = fn.run(problem, params)
+
+# Converit estructura a diccionario y guardar modelo
+dict_modelo = datos.f_struct2dict(out, True)
+
+
+
+

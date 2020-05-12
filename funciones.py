@@ -7,6 +7,8 @@
 
 # Importar librerias
 import numpy as np
+from ypstruct import structure
+import pandas as pd
 
 
 # -- --------------------------------------------------------- FUNCION: Condiciones  -- #
@@ -67,15 +69,15 @@ def conclusiones_generales(df_ventana, fecha):
                  'La volatilidad observada en la ventana es de {} pips.\n' \
                  'De la apertura al maximo de la ventana hay {} pips,' \
                  ' al minimo de la ventana hay {} pips.\n\n'.format(fecha, ventana, np.round(max_point, 5),
-                                                                   np.round(min_point, 5), volatilidad,
-                                                                   pips_alcistas, pips_bajistas)
+                                                                    np.round(min_point, 5), volatilidad,
+                                                                    pips_alcistas, pips_bajistas)
     return conclusion
 
 
 # -- --------------------------------------------------------- FUNCION: Sharp  -- #
 # -- Funcion para el radio de sharp
 
-def sharp(df_portfolio, rf: float = 0.08):
+def sharpe(df_portfolio, rf: float = 0.08):
     """
     :param df_portfolio: dataframe con el capital acumulado del portafolio
     :param rf: tasa libre de riesgo de EUA
@@ -86,9 +88,195 @@ def sharp(df_portfolio, rf: float = 0.08):
     df_portfolio = df_backtest
     rf = 0.08
     """
+    df_portfolio = df_portfolio.copy()
     log_returns = np.log(df_portfolio.capital_acm / df_portfolio.capital_acm.shift()).dropna()
     port_ret = np.sum(log_returns)
     port_std = log_returns.std()
-    sharp = (port_ret - rf) / port_std
+    sharpe_value = float((port_ret - rf) / port_std)
 
-    return sharp
+    return sharpe_value
+
+
+# -- --------------------------------------------------------- FUNCION: Run  -- #
+# -- Funcion para correr el algoritmo genetico
+
+# noinspection DuplicatedCode
+def run(problem, params):
+    """
+    :param problem: estructura con datos del proble a optimizar
+    :param params: parametros para la optimizacion
+    :return: optimizacion por algoritmo genetico
+    
+    codigo basado en el siguiente recurso:
+    https://yarpiz.com/632/ypga191215-practical-genetic-algorithms-in-python-and-matlab
+
+    Debugging
+    --------
+    problem = problem
+    params = params
+    """
+    # Problem Information
+    costfunc = problem.costfunc
+    hist = problem.data
+    investment = problem.init_invest
+    backtest = problem.backtest
+    nvar = problem.nvar
+    varmin = problem.varmin
+    varmax = problem.varmax
+
+    # Parameters
+    maxit = params.maxit  # Iterations
+    npop = params.npop  # Population size
+    beta = params.beta  #
+    pc = params.pc  # proportion of children
+    nc = int(np.round(pc * npop / 2) * 2)  # Number of children as even number
+    gamma = params.gamma  # Exploration space
+    mu = params.mu  # Mutarion chance
+    sigma = params.sigma  # Step size
+
+    # Empty Individual Template
+    empty_individual = structure()
+    empty_individual.position = None
+    empty_individual.cost = None
+
+    # Best Solution Ever Found
+    bestsol = empty_individual.deepcopy()
+    bestsol.cost = np.NINF
+
+    # datos para poder pasar df decisiones en backtest
+    info = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
+                         'operacion': ['sell', 'buy', 'sell', 'buy']})
+
+    # Initialize Population
+    pop = empty_individual.repeat(npop)
+    for i in range(npop):
+        pop[i].position = np.random.randint(varmin, varmax, nvar)
+        decisiones = pd.concat([info, pd.DataFrame(np.reshape(pop[i].position, (4, 3)),
+                                                   columns=['sl', 'tp', 'volumen'])], axis=1)
+        df_backtest = backtest(decisiones, hist, investment)
+        pop[i].cost = costfunc(df_backtest)
+        if pop[i].cost > bestsol.cost:
+            bestsol = pop[i].deepcopy()
+
+    # Best Cost of Iterations
+    bestcost = np.empty(maxit)
+
+    # Main Loop
+    for it in range(maxit):
+
+        costs = np.array([x.cost for x in pop])
+        avg_cost = np.mean(costs)
+        if avg_cost != 0:
+            costs = costs / avg_cost
+        probs = np.exp(-beta * costs)
+
+        popc = []
+        for _ in range(nc // 2):
+
+            # Select Parents
+            # q = np.random.permutation(npop)
+            # p1 = pop[q[0]]
+            # p2 = pop[q[1]]
+
+            # Perform Roulette Wheel Selection
+            p1 = pop[roulette_wheel_selection(probs)]
+            p2 = pop[roulette_wheel_selection(probs)]
+
+            # Perform Crossover
+            c1, c2 = crossover(p1, p2, gamma)
+
+            # Perform Mutation
+            c1 = mutate(c1, mu, sigma)
+            c2 = mutate(c2, mu, sigma)
+
+            # Apply Bounds
+            apply_bound(c1, varmin, varmax)
+            apply_bound(c2, varmin, varmax)
+
+            # Evaluate First Offspring
+            c1.cost = costfunc(backtest(pd.concat([info, pd.DataFrame(np.reshape(c1.position, (4, 3)),
+                                                                      columns=['sl', 'tp', 'volumen'])], axis=1),
+                                        hist,
+                                        investment))
+            if c1.cost > bestsol.cost:
+                bestsol = c1.deepcopy()
+
+            # Evaluate Second Offspring
+            c2.cost = costfunc(backtest(pd.concat([info, pd.DataFrame(np.reshape(c2.position, (4, 3)),
+                                                                      columns=['sl', 'tp', 'volumen'])], axis=1),
+                                        hist,
+                                        investment))
+            if c2.cost > bestsol.cost:
+                bestsol = c2.deepcopy()
+
+            # Add Offsprings to popc
+            popc.append(c1)
+            popc.append(c2)
+
+        # Merge, Sort and Select
+        pop += popc
+        pop = sorted(pop, key=lambda x: x.cost, reverse=True)
+        pop = pop[0:npop]
+
+        # Store Best Cost
+        bestcost[it] = bestsol.cost
+
+        # Show Iteration Information
+        print("Iteration {}: Best Sharpe = {}".format(it, bestcost[it]))
+
+    # Output
+    out = structure()
+    out.pop = pop
+    out.bestsol = bestsol
+    out.bestcost = bestcost
+    return out
+
+
+# -- --------------------------------------------------------- FUNCION: Crossover  -- #
+# -- Funcion mezclar padres
+
+def crossover(p1, p2, gamma=0.1):
+    c1 = p1.deepcopy()
+    c2 = p1.deepcopy()
+    alpha = np.random.randint(-gamma, 1 + gamma, *c1.position.shape)
+    c1.position = alpha * p1.position + (1 - alpha) * p2.position
+    c2.position = alpha * p2.position + (1 - alpha) * p1.position
+    return c1, c2
+
+
+# -- --------------------------------------------------------- FUNCION: Mutate  -- #
+# -- Mutar a los hijos
+
+def mutate(x, mu, sigma):
+    """
+    :param x: estructura a mutar
+    :param mu: probabilidad de mutacion
+    :param sigma: tamaño de mutacion
+    :return: estructura mutada
+
+    Debugging
+    --------
+    x = c1
+    """
+    y = x.deepcopy()
+    flag = np.random.rand(*x.position.shape) <= mu
+    ind = np.argwhere(flag)
+    y.position[ind] += sigma * np.random.randint(1, 10, ind.shape)
+    return y
+
+
+# -- --------------------------------------------------------- FUNCION: Apply Bound  -- #
+# -- Mantener los valores dentro de los limites extablecidos
+def apply_bound(x, varmin, varmax):
+    x.position = np.maximum(x.position, varmin)
+    x.position = np.minimum(x.position, varmax)
+
+
+# -- --------------------------------------------------------- FUNCION: Selection  -- #
+# -- Seleccionar cuales mutar
+
+def roulette_wheel_selection(p):
+    c = np.cumsum(p)
+    r = sum(p) * np.random.rand()
+    ind = np.argwhere(r <= c)
+    return ind[0][0]

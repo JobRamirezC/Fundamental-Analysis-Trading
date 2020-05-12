@@ -245,10 +245,3 @@ def f_backtest(df_decisiones, df_hist, inversion_inicial: float):
         df_bt['capital'] = [df_bt['pips'][i] / 10000 * df_bt['volumen'][i] for i in df_bt.index]
         df_bt['capital_acm'] = df_bt['capital'].cumsum() + inversion_inicial
     return df_bt
-
-
-# -- --------------------------------------------------------- FUNCION: Optmizacion -- #
-# -- Optmizar parametros de volumen, tp y sl
-
-def f_optimize():
-    pass

@@ -267,7 +267,7 @@ def f_validar_info(df):
     return df
 
 
-# -- ------------------------------------------------- FUNCION: cargar archivo formato json -- #
+# -- ------------------------------------------------- FUNCION: cargar archivo formato plk -- #
 # -- Guardar diccionario de historicos en formato pickle
 
 def load_pickle_file(filename):
@@ -275,11 +275,47 @@ def load_pickle_file(filename):
     return data
 
 
-# -- ------------------------------------------------- FUNCION: guardar archivo formato json -- #
+# -- ------------------------------------------------- FUNCION: guardar archivo formato pkl -- #
 # -- Cargar diccionario de historicos en formato pickle
 
 def save_pickle_file(data, filename):
     pickle.dump(data, open(filename, 'wb'))
+
+
+# -- ------------------------------------------------- FUNCION: structure to dict -- #
+# -- Convertir estructura ypstruct a diccionario
+
+def f_struct2dict(structure, save: bool = True):
+    """
+    :param structure: estructura a convertir
+    :param save: guardar parametros en archivo pickle
+    :return: diccionario con informacion de estructura
+
+    """
+
+    # datos para poder pasar df decisiones en backtest
+    info = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
+                         'operacion': ['sell', 'buy', 'sell', 'buy']})
+
+    out_dict = {'populations': {},
+                'best_solution': {'position': pd.concat([info, pd.DataFrame(np.reshape(out.bestsol.position,
+                                                                                       (4, 3)),
+                                                         columns=['sl', 'tp', 'volumen'])],
+                                                        axis=1),
+                                  'sharpe': structure.bestsol.cost},
+                'best_sharp': structure.bestcost}
+
+    for i in range(len(structure.pop)):
+        out_dict['populations'][i] = {'position': pd.concat([info, pd.DataFrame(np.reshape(structure.pop[i].position,
+                                                                                           (4, 3)),
+                                                         columns=['sl', 'tp', 'volumen'])],
+                                                        axis=1),
+                                      'sharpe': structure.pop[i].cost}
+
+    if save:
+        save_pickle_file(out_dict, 'datos/optimizacion.pkl')
+
+    return out_dict
 
 
 # -- ------------------------------------------------------- Operacion: Descargar precios -- #
