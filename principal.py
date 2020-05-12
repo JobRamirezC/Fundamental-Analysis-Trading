@@ -5,12 +5,15 @@
 # -- repositorio: https://github.com/manuelpintado/Proyecto_Equipo_6.git
 # -- ------------------------------------------------------------------------------------ -- #
 
+# Importat librerias
 import proceso as pr
 import visualizaciones as vs
 import pandas as pd
-from funciones import sharp
-import time
-import numpy as np
+import funciones as fn
+from ypstruct import structure
+import datos
+
+
 
 # Leer archivo de historico de indicador
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
@@ -100,10 +103,41 @@ test = test.loc[test['DateTime'] <= end]
 test.reset_index(inplace=True, drop=True)
 
 # Hacer backtest
-inicio = time.time()
-df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_escenarios=train, inversion_inicial=capital_inicial)
-fin = time.time()
-print('El backtest tomo {} segundos'.format(np.round(fin - inicio, 0)))
+df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
 
 # Calcular radio de Sharp
-sharp = sharp(df_portfolio=df_backtest)
+sharpe_value = fn.sharpe(df_portfolio=df_backtest)
+
+# Optimizar modelo
+problem = structure()
+problem.costfunc = fn.sharpe
+problem.backtest = pr.f_backtest
+problem.data = train
+problem.init_invest = capital_inicial
+problem.nvar = 12
+problem.varmin = [10, 10, 1000, 10, 10, 1000, 10, 10, 1000, 10, 10, 1000]
+problem.varmax = [15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000]
+
+# GA Parameters
+params = structure()
+params.maxit = 5
+params.npop = 60
+params.beta = 1
+params.pc = 4
+params.gamma = 0.1
+params.mu = 0.15
+params.sigma = 1
+
+# Run GA
+print('------------------------')
+print('Optimizacion del ratio de sharpe')
+print('------------------------')
+
+out = fn.run(problem, params)
+
+# Converit estructura a diccionario y guardar modelo
+dict_modelo = datos.f_struct2dict(out, True)
+
+
+
+

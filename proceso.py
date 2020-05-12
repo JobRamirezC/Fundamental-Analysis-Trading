@@ -8,12 +8,11 @@
 # Importar librerias
 import datos
 import funciones as fn
-import pandas as pd
-import numpy as np
 from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.diagnostic import het_arch
 from scipy.stats import shapiro
+
 
 # -- ----------------------------------------- FUNCION: Dicky Fuller Aumentada -- #
 # -- Encontrar estacionariedad de la serie
@@ -193,98 +192,56 @@ def f_metricas(df_indicador, load_file: bool = False):
 # -- --------------------------------------------------------- FUNCION: Backtest -- #
 # -- Hacer backtest de datos historicos
 
-def f_backtest(df_decisiones, df_escenarios, inversion_inicial: float):
+def f_backtest(df_decisiones, df_hist, inversion_inicial: float):
     """
 
     :param df_decisiones: dataframe de las decisiones para cada tipo de escenario del indicador (A,B,C,D)
-    :param df_escenarios: dataframe de cuando se emitio el indicador y que tipo de escenario es
+    :param df_hist: dataframe de cuando se emitio el indicador y que tipo de escenario es
     :param inversion_inicial: monto inicial de la cuenta
     :return: dataframe con el backtest para todos los escenarios del indicador
 
     Debugging
     --------
     df_decisiones = df_decisiones
-    df_escenarios = train
+    df_hist = train
     inversion_inicial = 100000
     """
-    df_backtest = df_escenarios.loc[:, ('DateTime', 'escenario')]
-    df_backtest['operacion'] = ''
-    df_backtest['volumen'] = 0
-    df_backtest['resultado'] = ''
-    df_backtest['pips'] = 0
-    df_backtest['capital'] = 0
-    df_backtest['capital_acm'] = 0
+    dict_ventanas = datos.load_pickle_file('datos/ventanas_historicos.pkl')['historicos_sucesos']  # Cargar ventanas
+    df_bt = df_hist.loc[:, ('DateTime', 'escenario')]  # Extraer columnas necesarias de histrico
+    df_bt = df_bt.merge(df_decisiones.loc[:, ('escenario', 'operacion', 'volumen')], how='left', on='escenario')
+    df_bt = df_bt.reindex(columns=df_bt.columns.tolist() + ['resultado', 'pips'])  # agregar columnas
 
-    for i in df_backtest.index:
-        df_ventana = datos.load_pickle_file('datos/ventanas_historicos.pkl')['historicos_sucesos'
-                                                                             ][str(df_backtest['DateTime'][i])]
-        valores = df_decisiones.loc[df_decisiones.escenario == df_escenarios.escenario[i]]
-        sl = valores.sl.values[0]  # Stop loss
-        tp = valores.tp.values[0]  # Take profit
-        df_backtest.loc[i, 'operacion'] = valores.operacion.values[0]  # Tipo de operacion (compra/venta)
-        df_backtest.loc[i, 'volumen'] = valores.volumen.values[0]  # Volumen de operacion
+    # revisar ventanas
+    for i in df_bt.index:
+        ventana = dict_ventanas[str(df_bt['DateTime'][i])]  # Tomar ventana para revisar
+        tp_sl = df_decisiones.loc[df_decisiones['escenario'] == df_bt['escenario'][i], ('tp', 'sl')]
+        if df_bt['operacion'][i] == 'buy':
+            for j in ventana.index:
+                if ventana.High[j] >= (ventana.Open[0] + tp_sl.iloc[0, 0] / 10000):
+                    df_bt.loc[i, 'resultado'] = 'ganada'
+                    df_bt.loc[i, 'pips'] = tp_sl.iloc[0, 0]
+                    break
+                elif ventana.Low[j] <= (ventana.Open[0] - tp_sl.iloc[0, 1] / 10000):
+                    df_bt.loc[i, 'resultado'] = 'perdida'
+                    df_bt.loc[i, 'pips'] = -tp_sl.iloc[0, 1]
+                    break
+                elif j == ventana.index[-1]:
+                    df_bt.loc[i, 'resultado'] = 'ganada' if ventana.Close[j] >= ventana.Open[0] else 'perdida'
+                    df_bt.loc[i, 'pips'] = (ventana.Close[j] - ventana.Open[0]) * 10000
+        else:  # Operacion es sell
+            for j in ventana.index:
+                if ventana.Low[j] <= (ventana.Open[0] - tp_sl.iloc[0, 0] / 10000):
+                    df_bt.loc[i, 'resultado'] = 'ganada'
+                    df_bt.loc[i, 'pips'] = tp_sl.iloc[0, 0]
+                    break
+                elif ventana.High[j] >= (ventana.Open[0] + tp_sl.iloc[0, 1] / 10000):
+                    df_bt.loc[i, 'resultado'] = 'perdida'
+                    df_bt.loc[i, 'pips'] = -tp_sl.iloc[0, 1]
+                    break
+                elif j == ventana.index[-1]:
+                    df_bt.loc[i, 'resultado'] = 'ganada' if ventana.Close[j] <= ventana.Open[0] else 'perdida'
+                    df_bt.loc[i, 'pips'] = (ventana.Open[0] - ventana.Close[j]) * 10000
 
-        if df_backtest.operacion[i] == 'buy':
-            for k in df_ventana.index:
-                if df_ventana.High[k] >= df_ventana.Open[0] + (tp / 10000):
-                    df_backtest.loc[i, 'resultado'] = 'ganadora'
-                    df_backtest.loc[i, 'pips'] = tp
-                    df_backtest.loc[i, 'capital'] = tp / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[i, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-                    break
-                elif df_ventana.Low[k] <= df_ventana.Open[0] - (sl / 10000):
-                    df_backtest.loc[i, 'resultado'] = 'perdedora'
-                    df_backtest.loc[i, 'pips'] = -sl
-                    df_backtest.loc[i, 'capital'] = -sl / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[i, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-                    break
-                elif k == df_ventana.last_valid_index():
-                    if df_ventana.Close[k] >= df_ventana.Open[0]:
-                        df_backtest.loc[i, 'resultado'] = 'ganadora'
-                    else:
-                        df_backtest.loc[i, 'resultado'] = 'perdedora'
-                    df_backtest.loc[i, 'pips'] = (df_ventana.Close[k] - df_ventana.Open[0]) * 10000
-                    df_backtest.loc[i, 'capital'] = df_backtest.pips[i] / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[i, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-        else:  # operacion = sell
-            for k in df_ventana.index:
-                if df_ventana.Low[k] <= df_ventana.Open[0] - (tp / 10000):
-                    df_backtest.loc[i, 'resultado'] = 'ganadora'
-                    df_backtest.loc[i, 'pips'] = tp
-                    df_backtest.loc[i, 'capital'] = tp / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[i, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-                    break
-                elif df_ventana.High[k] >= df_ventana.Open[0] + (sl / 10000):
-                    df_backtest.loc[i, 'resultado'] = 'perdedora'
-                    df_backtest.loc[i, 'pips'] = -sl
-                    df_backtest.loc[i, 'capital'] = -sl / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[i, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-                    break
-                elif k == df_ventana.last_valid_index():
-                    if df_ventana.Close[k] <= df_ventana.Open[0]:
-                        df_backtest.loc[i, 'resultado'] = 'ganadora'
-                    else:
-                        df_backtest.loc[i, 'resultado'] = 'perdedora'
-                    df_backtest.loc[i, 'pips'] = (df_ventana.Open[0] - df_ventana.Close[k]) * 10000
-                    df_backtest.loc[i, 'capital'] = df_backtest.pips[i] / 10000 * df_backtest.volumen[i]
-                    if i == 0:
-                        df_backtest.loc[0, 'capital_acm'] = inversion_inicial + df_backtest.capital[0]
-                    else:
-                        df_backtest.loc[i, 'capital_acm'] = df_backtest.capital_acm[i - 1] + df_backtest.capital[i]
-
-    return df_backtest
+        df_bt['capital'] = [df_bt['pips'][i] / 10000 * df_bt['volumen'][i] for i in df_bt.index]
+        df_bt['capital_acm'] = df_bt['capital'].cumsum() + inversion_inicial
+    return df_bt
