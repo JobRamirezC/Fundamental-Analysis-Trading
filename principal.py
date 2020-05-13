@@ -12,8 +12,7 @@ import pandas as pd
 import funciones as fn
 from ypstruct import structure
 import datos
-
-
+import time
 
 # Leer archivo de historico de indicador
 df_indicador = pr.f_clasificacion_ocurrencias(file_path='datos/Unemployment Rate - United States.csv',
@@ -104,40 +103,40 @@ test.reset_index(inplace=True, drop=True)
 
 # Hacer backtest
 df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
+end = time.time()
 
 # Calcular radio de Sharp
 sharpe_value = fn.sharpe(df_portfolio=df_backtest)
 
+
 # Optimizar modelo
 problem = structure()
 problem.costfunc = fn.sharpe
-problem.backtest = pr.f_backtest
+problem.backtest = pr.f_backtest_2
 problem.data = train
 problem.init_invest = capital_inicial
 problem.nvar = 12
 problem.varmin = [10, 10, 1000, 10, 10, 1000, 10, 10, 1000, 10, 10, 1000]
-problem.varmax = [15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000, 15000, 15000, 100000]
+problem.varmax = [200, 200, 100000, 200, 200, 100000, 200, 200, 100000, 200, 200, 100000]
 
 # GA Parameters
 params = structure()
-params.maxit = 5
+params.maxit = 1000
 params.npop = 60
 params.beta = 1
 params.pc = 4
-params.gamma = 0.1
+params.gamma = 0.15
 params.mu = 0.15
 params.sigma = 1
 
-# Run GA
-print('------------------------')
-print('Optimizacion del ratio de sharpe')
-print('------------------------')
+# Correr Algoritmo Genetico
+dict_modelo = fn.run(problem, params)
 
-out = fn.run(problem, params)
+# Cargar modelo si ya se tienen los parametros optimizados
+# dict_modelo = datos.load_pickle_file('datos/optimizacion.pkl')
 
-# Converit estructura a diccionario y guardar modelo
-dict_modelo = datos.f_struct2dict(out, True)
+# Extraer lista de evolucion de ratio de Sharpe
+sharp_optimization = dict_modelo['best_sharpe']
 
-
-
-
+# Graficar evolucion de ratio
+vs_optimizacion = vs.g_optimizacion(values=sharp_optimization)

@@ -9,6 +9,8 @@
 import numpy as np
 from ypstruct import structure
 import pandas as pd
+from datos import f_struct2dict
+import time
 
 
 # -- --------------------------------------------------------- FUNCION: Condiciones  -- #
@@ -88,13 +90,9 @@ def sharpe(df_portfolio, rf: float = 0.08):
     df_portfolio = df_backtest
     rf = 0.08
     """
-    df_portfolio = df_portfolio.copy()
-    log_returns = np.log(df_portfolio.capital_acm / df_portfolio.capital_acm.shift()).dropna()
-    port_ret = np.sum(log_returns)
-    port_std = log_returns.std()
-    sharpe_value = float((port_ret - rf) / port_std)
+    capital_acm = np.array(df_portfolio.capital_acm)
 
-    return sharpe_value
+    return float((np.sum(np.diff(np.log(capital_acm))) - rf) / np.std(capital_acm))
 
 
 # -- --------------------------------------------------------- FUNCION: Run  -- #
@@ -105,7 +103,7 @@ def run(problem, params):
     """
     :param problem: estructura con datos del proble a optimizar
     :param params: parametros para la optimizacion
-    :return: optimizacion por algoritmo genetico
+    :return: optimizacion por algoritmo genetico en formato diciconario y guarda en formato pkl
     
     codigo basado en el siguiente recurso:
     https://yarpiz.com/632/ypga191215-practical-genetic-algorithms-in-python-and-matlab
@@ -115,6 +113,12 @@ def run(problem, params):
     problem = problem
     params = params
     """
+
+    # informar que se inicia la optimización
+    print('------------------------')
+    print('Optimizacion del ratio de sharpe')
+    print('------------------------')
+
     # Problem Information
     costfunc = problem.costfunc
     hist = problem.data
@@ -143,17 +147,11 @@ def run(problem, params):
     bestsol = empty_individual.deepcopy()
     bestsol.cost = np.NINF
 
-    # datos para poder pasar df decisiones en backtest
-    info = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
-                         'operacion': ['sell', 'buy', 'sell', 'buy']})
-
     # Initialize Population
     pop = empty_individual.repeat(npop)
     for i in range(npop):
         pop[i].position = np.random.randint(varmin, varmax, nvar)
-        decisiones = pd.concat([info, pd.DataFrame(np.reshape(pop[i].position, (4, 3)),
-                                                   columns=['sl', 'tp', 'volumen'])], axis=1)
-        df_backtest = backtest(decisiones, hist, investment)
+        df_backtest = backtest(pop[i].position, hist, investment)
         pop[i].cost = costfunc(df_backtest)
         if pop[i].cost > bestsol.cost:
             bestsol = pop[i].deepcopy()
@@ -163,7 +161,7 @@ def run(problem, params):
 
     # Main Loop
     for it in range(maxit):
-
+        ini = time.time()
         costs = np.array([x.cost for x in pop])
         avg_cost = np.mean(costs)
         if avg_cost != 0:
@@ -194,18 +192,12 @@ def run(problem, params):
             apply_bound(c2, varmin, varmax)
 
             # Evaluate First Offspring
-            c1.cost = costfunc(backtest(pd.concat([info, pd.DataFrame(np.reshape(c1.position, (4, 3)),
-                                                                      columns=['sl', 'tp', 'volumen'])], axis=1),
-                                        hist,
-                                        investment))
+            c1.cost = costfunc(backtest(c1.position, hist, investment))
             if c1.cost > bestsol.cost:
                 bestsol = c1.deepcopy()
 
             # Evaluate Second Offspring
-            c2.cost = costfunc(backtest(pd.concat([info, pd.DataFrame(np.reshape(c2.position, (4, 3)),
-                                                                      columns=['sl', 'tp', 'volumen'])], axis=1),
-                                        hist,
-                                        investment))
+            c2.cost = costfunc(backtest(c2.position, hist, investment))
             if c2.cost > bestsol.cost:
                 bestsol = c2.deepcopy()
 
@@ -222,14 +214,24 @@ def run(problem, params):
         bestcost[it] = bestsol.cost
 
         # Show Iteration Information
-        print("Iteration {}: Best Sharpe = {}".format(it, bestcost[it]))
+        fin = time.time()
+        print("Iteration {}: Best Sharpe = {}\n"
+              " -Time: {:.2f} minutos".format(it, bestcost[it], (fin - ini) / 60))
+
+        if it % 100 == 0 and it != 0:
+            out = structure()
+            out.pop = pop
+            out.bestsol = bestsol
+            out.bestcost = bestcost
+            f_struct2dict(out, True)
 
     # Output
     out = structure()
     out.pop = pop
     out.bestsol = bestsol
     out.bestcost = bestcost
-    return out
+    modelo = f_struct2dict(out, True)
+    return modelo
 
 
 # -- --------------------------------------------------------- FUNCION: Crossover  -- #
