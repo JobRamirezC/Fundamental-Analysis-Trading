@@ -196,7 +196,7 @@ def g_serie_indicador(df_serie):
     return fig
 
 
-# -- ----------------------------------------- Grafica: DEscomposicion estacional -- #
+# -- ----------------------------------------- Grafica: Descomposicion estacional -- #
 # -- Graficar estacionalidad, residuos observados  y tendencia
 
 def g_estacionalidad_descompuesta(object):
@@ -240,6 +240,37 @@ def g_estacionalidad_descompuesta(object):
                           color="#7f7f7f"),
                       showlegend=False)
 
+    fig.show()
+
+    return fig
+
+
+# -- ----------------------------------------- Grafica: Optimizacion -- #
+# -- Graficar evolucion de la optimizacion del ratio de sharpe
+
+def g_optimizacion(values):
+    """
+    :param values: arreglo de valores de la evolucion del ratio de sharpe
+    :return: grafica de linea
+    """
+
+    fig = go.Figure()
+
+    fig.add_trace(go.Scatter(x=np.arange(0, len(values)), y=values,
+                             mode='lines+markers'))
+
+    fig.update_layout(title={'text': 'Evolucion Optimizacion Ratio de Shapre',
+                             'y': 0.95,
+                             'x': 0.5,
+                             'xanchor': 'center',
+                             'yanchor': 'top'},
+                      xaxis_title='Iteracion Algorímo Genético',
+                      yaxis_title='Ratio de Sharpe',
+                      font=dict(
+                          family="Courier New, monospace",
+                          size=18,
+                          color="#7f7f7f"),
+                      showlegend=False)
     fig.show()
 
     return fig

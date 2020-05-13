@@ -298,19 +298,20 @@ def f_struct2dict(structure, save: bool = True):
                          'operacion': ['sell', 'buy', 'sell', 'buy']})
 
     out_dict = {'populations': {},
-                'best_solution': {'position': pd.concat([info, pd.DataFrame(np.reshape(out.bestsol.position,
+                'best_solution': {'position': pd.concat([info, pd.DataFrame(np.reshape(structure.bestsol.position,
                                                                                        (4, 3)),
-                                                         columns=['sl', 'tp', 'volumen'])],
+                                                                            columns=['sl', 'tp', 'volumen'])],
                                                         axis=1),
                                   'sharpe': structure.bestsol.cost},
-                'best_sharp': structure.bestcost}
+                'best_sharpe': structure.bestcost}
 
     for i in range(len(structure.pop)):
-        out_dict['populations'][i] = {'position': pd.concat([info, pd.DataFrame(np.reshape(structure.pop[i].position,
-                                                                                           (4, 3)),
-                                                         columns=['sl', 'tp', 'volumen'])],
-                                                        axis=1),
-                                      'sharpe': structure.pop[i].cost}
+        out_dict['populations'][str(i)] = {
+            'position': pd.concat([info, pd.DataFrame(np.reshape(structure.pop[i].position,
+                                                                 (4, 3)),
+                                                      columns=['sl', 'tp', 'volumen'])],
+                                  axis=1),
+            'sharpe': structure.pop[i].cost}
 
     if save:
         save_pickle_file(out_dict, 'datos/optimizacion.pkl')

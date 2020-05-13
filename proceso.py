@@ -12,6 +12,8 @@ from statsmodels.tsa.seasonal import seasonal_decompose
 from statsmodels.tsa.stattools import adfuller
 from statsmodels.stats.diagnostic import het_arch
 from scipy.stats import shapiro
+import numpy as np
+import pandas as pd
 
 
 # -- ----------------------------------------- FUNCION: Dicky Fuller Aumentada -- #
@@ -244,4 +246,95 @@ def f_backtest(df_decisiones, df_hist, inversion_inicial: float):
 
         df_bt['capital'] = [df_bt['pips'][i] / 10000 * df_bt['volumen'][i] for i in df_bt.index]
         df_bt['capital_acm'] = df_bt['capital'].cumsum() + inversion_inicial
+    return df_bt
+
+def f_backtest_2(decisiones, df_hist, inversion_inicial: float):
+    """
+
+    :param df_decisiones: dataframe de las decisiones para cada tipo de escenario del indicador (A,B,C,D)
+    :param df_hist: dataframe de cuando se emitio el indicador y que tipo de escenario es
+    :param inversion_inicial: monto inicial de la cuenta
+    :return: dataframe con el backtest para todos los escenarios del indicador
+
+    Debugging
+    --------
+    decisiones = np.array([  175,   130, 31323,   152,    88, 77186,   131,   148, 23998,
+         161,    76, 52007])
+    df_hist = train
+    inversion_inicial = 100000
+    """
+    dict_ventanas = datos.load_pickle_file('datos/ventanas_historicos.pkl')['historicos_sucesos']  # Cargar ventanas
+    dates = np.array(df_hist['DateTime'])
+    escenario = np.array(df_hist['escenario'])
+    resultado = np.empty(len(dates), dtype='object')
+    pips = np.empty(len(dates))
+    operacion = np.empty(len(dates), dtype='object')
+    volumen = np.empty(len(dates))
+
+
+    # revisar ventanas
+    for i in range(len(dates)):
+        ventana = dict_ventanas[str(pd.to_datetime(dates[i]))]  # Tomar ventana para revisar
+        open = np.array(ventana.Open)
+        high = np.array(ventana.High)
+        low = np.array(ventana.Low)
+        close = np.array(ventana.Close)
+
+        if escenario[i] == 'A':
+            tp_sl = np.array([decisiones[0], decisiones[1]])
+            volumen[i] = decisiones[2]
+            operacion[i] = 'venta'
+        elif escenario[i] == 'B':
+            tp_sl = np.array([decisiones[3], decisiones[4]])
+            volumen[i] = decisiones[5]
+            operacion[i] = 'compra'
+        elif escenario[i] == 'C':
+            tp_sl = np.array([decisiones[6], decisiones[7]])
+            volumen[i] = decisiones[8]
+            operacion[i] = 'venta'
+        else:
+            tp_sl = np.array([decisiones[9], decisiones[10]])
+            volumen[i] = decisiones[11]
+            operacion[i] = 'compra'
+
+        if operacion[i] == 'buy':
+            for j in range(len(open)):
+                if high[j] >= (open[0] + tp_sl[0] / 10000):
+                    resultado[i] = 'ganada'
+                    pips[i] = tp_sl[0]
+                    break
+                elif low[j] <= (open[0] - tp_sl[1] / 10000):
+                    resultado[i] = 'perdida'
+                    pips[i] = -tp_sl[1]
+                    break
+                elif j == len(open)-1:
+                    resultado[i] = 'ganada' if close[j] >= open[0] else 'perdida'
+                    pips[i] = (close[j] - open[0]) * 10000
+        else:  # Operacion es sell
+            for j in range(len(open)):
+                if low[j] <= (open[0] - tp_sl[0] / 10000):
+                    resultado[i] = 'ganada'
+                    pips[i] = tp_sl[0]
+                    break
+                elif high[j] >= (open[0] + tp_sl[1] / 10000):
+                    resultado[i] = 'perdida'
+                    pips[i] = -tp_sl[1]
+                    break
+                elif j == len(open)-1:
+                    resultado[i] = 'ganada' if close[j] <= open[0] else 'perdida'
+                    pips[i] = (open[0] - close[j]) * 10000
+
+
+        capital = np.array(pips / 10000 * volumen)
+        capital_acm = capital.cumsum() + inversion_inicial
+
+        df_bt = pd.DataFrame({'DateTime': pd.to_datetime(dates),
+                              'escenario': escenario,
+                              'operacion': operacion,
+                              'volumen': volumen,
+                              'resultado': resultado,
+                              'pips': pips,
+                              'capital': capital,
+                              'capital_acm': capital_acm})
+
     return df_bt
