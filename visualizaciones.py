@@ -274,3 +274,29 @@ def g_optimizacion(values):
     fig.show()
 
     return fig
+
+# -- ----------------------------------------- Grafica: Optimizacion -- #
+# -- Graficar evolucion de la optimizacion del ratio de sharpe
+
+def g_evolucion_capital(df_cuenta):
+    """
+        :param values: arreglo de valores de la evolucion del ratio de sharpe
+        :return: grafica de linea
+    """
+    fig = go.Figure()
+    fig.add_trace(go.Scatter(x=df_cuenta['DateTime'], y=df_cuenta['capital_acm'],
+                             mode='lines'))
+
+    fig.update_layout(title={'text': 'Evolucion Capital Cuenta',
+                             'y': 0.95,
+                             'x': 0.5,
+                             'xanchor': 'center',
+                             'yanchor': 'top'},
+                      xaxis_title='$',
+                      yaxis_title='Fecha',
+                      font=dict(
+                          family="Courier New, monospace",
+                          size=18,
+                          color="#7f7f7f"),
+                      showlegend=False)
+    fig.show()

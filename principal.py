@@ -138,3 +138,16 @@ sharp_optimization = dict_modelo['best_sharpe']
 
 # Graficar evolucion de ratio
 vs_optimizacion = vs.g_optimizacion(values=sharp_optimization)
+
+# Crear data frame de decisiones optimizadas
+df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
+                              'operacion': ['sell', 'buy', 'sell', 'buy']})
+
+
+# Visualizar evolucion del capital con parametros optimizados entrenamiento
+df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
+vs_backtest_optimizado = vs.g_evolucion_capital(df_backtest)
+
+# Visualizar evolucion del capital con parametros optimizados prueba
+df_prueba = pr.f_backtest(df_decisiones=df_decisiones, df_hist=test, inversion_inicial=capital_inicial)
+vs_prueba_optimizado = vs.g_evolucion_capital(df_prueba)
