@@ -153,3 +153,11 @@ vs_backtest_optimizado = vs.g_evolucion_capital(df_backtest)
 # Visualizar evolucion del capital con parametros optimizados prueba
 df_prueba = pr.f_backtest(df_decisiones=df_decisiones, df_hist=test, inversion_inicial=capital_inicial)
 vs_prueba_optimizado = vs.g_evolucion_capital(df_prueba)
+
+# Calcular MAD y presentar en un DataFrame
+
+MAD = pd.DataFrame({
+    'sharpe': fn.sharpe(df_prueba),
+    'sortino': fn.sortino(df_prueba),
+    'draw_down': fn.draw_down(df_prueba)
+}, index='valor_MAD')

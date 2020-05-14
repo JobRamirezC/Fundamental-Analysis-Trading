@@ -91,8 +91,9 @@ def sharpe(df_portfolio, rf: float = 0.08):
     rf = 0.08
     """
     capital_acm = np.array(df_portfolio.capital_acm)
+    returns = np.diff(np.log(capital_acm))
 
-    return float((np.sum(np.diff(np.log(capital_acm))) - rf) / np.std(capital_acm))
+    return float((np.sum(returns) - rf) / np.std(returns))
 
 
 # -- --------------------------------------------------------- FUNCION: Run  -- #
@@ -282,3 +283,38 @@ def roulette_wheel_selection(p):
     r = sum(p) * np.random.rand()
     ind = np.argwhere(r <= c)
     return ind[0][0]
+
+
+# -- --------------------------------------------------------- FUNCION: Sortino  -- #
+# -- Calcular sortino 
+
+def sortino(df_portfolio, rf: float = 0.08):
+    downside = np.array(df_portfolio[df_portfolio['resultado'] == 'perdida']['capital_acm'])
+    downside_std = np.std(np.diff(np.log(downside)))
+    returns = np.sum(np.diff(np.log(df_portfolio['capital_acm'])))
+    return float((returns - rf) / downside_std)
+    
+
+# -- --------------------------------------------------------- FUNCION: Sortino  -- #
+# -- Calcular sortino 
+
+def draw_down(param_data):
+    """
+
+    :param param_data: DataFrame
+    :return: string con fecha de incio, fecha de fin y monto
+
+    Debugging
+    --------
+    param_data = datos_diarios
+
+    """
+    mdd = 0
+    peak = param_data.capital_acm[0]
+    for i in param_data.index:
+        if param_data.capital_acm[i] > peak:
+            peak = param_data.capital_acm[i]
+        dd = peak - param_data.capital_acm[i]
+        if dd > mdd:
+            mdd = dd
+    return mdd
