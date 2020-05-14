@@ -64,6 +64,9 @@ shapiro_results = pr.f_normalidad(df_indicador=df_indicador)
 # Prueba de estacionalidad
 estacionalidad = pr.f_estacionalidad(df_indicador=df_indicador)
 
+# Prueba de heterocedasticidad
+arch = pr.f_heterocerasticidad(df_indicador=df_indicador)
+
 # Visualizar serie de tiempo indicador transformada para estacionariedad
 vs_grafica_6 = vs.g_serie_indicador(df_serie=df_indicador)
 
@@ -103,7 +106,7 @@ test.reset_index(inplace=True, drop=True)
 # Hacer backtest
 df_backtest = pr.f_backtest(df_decisiones=df_decisiones, df_hist=train, inversion_inicial=capital_inicial)
 
-# Calcular radio de Sharp
+# Calcular ratio de Sharp
 sharpe_value = fn.sharpe(df_portfolio=df_backtest)
 
 
@@ -140,8 +143,7 @@ sharp_optimization = dict_modelo['best_sharpe']
 vs_optimizacion = vs.g_optimizacion(values=sharp_optimization)
 
 # Crear data frame de decisiones optimizadas
-df_decisiones = pd.DataFrame({'escenario': ['A', 'B', 'C', 'D'],
-                              'operacion': ['sell', 'buy', 'sell', 'buy']})
+df_decisiones = dict_modelo['best_solution']['position']
 
 
 # Visualizar evolucion del capital con parametros optimizados entrenamiento
