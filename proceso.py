@@ -80,7 +80,7 @@ def f_normalidad(df_indicador):
 # -- ----------------------------------------- FUNCION: ARCH -- #
 # -- Encontrar autoregresion
 
-def f_heterocerasticidad(df_residuals):
+def f_heterocerasticidad(df_indicador):
     """
     
     Parameters
@@ -91,8 +91,8 @@ def f_heterocerasticidad(df_residuals):
     -------
 
     """
-    arch = het_arch(df_residuals)
-    pass
+    arch = het_arch(df_indicador['Actual'])
+    return arch
 
 
 # -- ----------------------------------------- FUNCION: Estacionalidad -- #

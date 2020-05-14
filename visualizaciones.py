@@ -292,11 +292,12 @@ def g_evolucion_capital(df_cuenta):
                              'x': 0.5,
                              'xanchor': 'center',
                              'yanchor': 'top'},
-                      xaxis_title='$',
-                      yaxis_title='Fecha',
+                      xaxis_title='Fecha',
+                      yaxis_title='$',
                       font=dict(
                           family="Courier New, monospace",
                           size=18,
                           color="#7f7f7f"),
                       showlegend=False)
+
     fig.show()
