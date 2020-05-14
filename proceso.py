@@ -258,8 +258,7 @@ def f_backtest_2(decisiones, df_hist, inversion_inicial: float):
 
     Debugging
     --------
-    decisiones = np.array([  175,   130, 31323,   152,    88, 77186,   131,   148, 23998,
-         161,    76, 52007])
+    decisiones = np.array([100,200,100000,100,200,100000,100,200,100000,100,200,100000])
     df_hist = train
     inversion_inicial = 100000
     """
@@ -281,44 +280,44 @@ def f_backtest_2(decisiones, df_hist, inversion_inicial: float):
         close = np.array(ventana.Close)
 
         if escenario[i] == 'A':
-            tp_sl = np.array([decisiones[0], decisiones[1]])
+            sl_tp = np.array([decisiones[0], decisiones[1]])
             volumen[i] = decisiones[2]
             operacion[i] = 'venta'
         elif escenario[i] == 'B':
-            tp_sl = np.array([decisiones[3], decisiones[4]])
+            sl_tp = np.array([decisiones[3], decisiones[4]])
             volumen[i] = decisiones[5]
             operacion[i] = 'compra'
         elif escenario[i] == 'C':
-            tp_sl = np.array([decisiones[6], decisiones[7]])
+            sl_tp = np.array([decisiones[6], decisiones[7]])
             volumen[i] = decisiones[8]
             operacion[i] = 'venta'
         else:
-            tp_sl = np.array([decisiones[9], decisiones[10]])
+            sl_tp = np.array([decisiones[9], decisiones[10]])
             volumen[i] = decisiones[11]
             operacion[i] = 'compra'
 
-        if operacion[i] == 'buy':
+        if operacion[i] == 'compra':
             for j in range(len(open)):
-                if high[j] >= (open[0] + tp_sl[0] / 10000):
+                if high[j] >= (open[0] + sl_tp[1] / 10000):
                     resultado[i] = 'ganada'
-                    pips[i] = tp_sl[0]
+                    pips[i] = sl_tp[1]
                     break
-                elif low[j] <= (open[0] - tp_sl[1] / 10000):
+                elif low[j] <= (open[0] - sl_tp[0] / 10000):
                     resultado[i] = 'perdida'
-                    pips[i] = -tp_sl[1]
+                    pips[i] = -sl_tp[0]
                     break
                 elif j == len(open)-1:
                     resultado[i] = 'ganada' if close[j] >= open[0] else 'perdida'
                     pips[i] = (close[j] - open[0]) * 10000
         else:  # Operacion es sell
             for j in range(len(open)):
-                if low[j] <= (open[0] - tp_sl[0] / 10000):
+                if low[j] <= (open[0] - sl_tp[1] / 10000):
                     resultado[i] = 'ganada'
-                    pips[i] = tp_sl[0]
+                    pips[i] = sl_tp[1]
                     break
-                elif high[j] >= (open[0] + tp_sl[1] / 10000):
+                elif high[j] >= (open[0] + sl_tp[0] / 10000):
                     resultado[i] = 'perdida'
-                    pips[i] = -tp_sl[1]
+                    pips[i] = -sl_tp[0]
                     break
                 elif j == len(open)-1:
                     resultado[i] = 'ganada' if close[j] <= open[0] else 'perdida'
