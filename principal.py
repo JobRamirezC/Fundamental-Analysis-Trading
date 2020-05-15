@@ -155,9 +155,12 @@ df_prueba = pr.f_backtest(df_decisiones=df_decisiones, df_hist=test, inversion_i
 vs_prueba_optimizado = vs.g_evolucion_capital(df_prueba)
 
 # Calcular MAD y presentar en un DataFrame
+sharpe_test = fn.sharpe(df_prueba)
+sortino_test = fn.sortino(df_prueba)
+draw_down_test = fn.draw_down(df_prueba)
 
 MAD = pd.DataFrame({
-    'sharpe': fn.sharpe(df_prueba),
-    'sortino': fn.sortino(df_prueba),
-    'draw_down': fn.draw_down(df_prueba)
-}, index='valor_MAD')
+    'sharpe': [sharpe_test],
+    'sortino': [sortino_test],
+    'draw_down': [draw_down_test]
+})
